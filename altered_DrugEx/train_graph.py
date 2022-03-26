@@ -75,7 +75,8 @@ if __name__ == "__main__":
     BATCH_SIZE = int(OPT.get('-b', '128'))
     dataset = OPT.get('-d', 'ligand_mf_brics')
 
-    voc = utils.VocGraph('data/voc_atom.txt', max_len=80, n_frags=4)
+#     voc = utils.VocGraph('data/voc_atom.txt', max_len=80, n_frags=4)
+    voc = utils.VocGraph('data/voc_graph.txt', max_len=80, n_frags=4)
     data = pd.read_table('data/%s_train_code.txt' % dataset)
     data = torch.from_numpy(data.values).long().view(len(data), voc.max_len, -1)
     train_loader = DataLoader(data, batch_size=BATCH_SIZE * 4, drop_last=True, shuffle=True)
