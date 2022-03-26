@@ -205,8 +205,10 @@ def pair_smiles_encode(fname, voc, out):
 
 
 def pos_neg_split():
-    pair = ['Target ChEMBL ID', 'Smiles', 'pChEMBL Value', 'Comment',
-            'Standard Type', 'Standard Relation']
+#     pair = ['Target ChEMBL ID', 'Smiles', 'pChEMBL Value', 'Comment',
+#             'Standard Type', 'Standard Relation']
+    pair = ['Molecule_ChEMBL_ID', 'Smiles', 'pChEMBL_Value', 'Comment',
+            'Standard_Type', 'Standard_Relation']
     obj = pd.read_table('data/LIGAND_RAW.tsv').dropna(subset=pair[1:2])
     df = obj[obj[pair[0]] == 'CHEMBL251']
     df = df[pair].set_index(pair[1])
