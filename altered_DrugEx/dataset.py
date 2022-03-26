@@ -256,12 +256,19 @@ if __name__ == '__main__':
 
     voc = utils.VocGraph('data/voc_graph.txt', n_frags=4)
     voc_smi = utils.VocSmiles('data/voc_smiles.txt')
-    out = 'data/%s_%s_%s' % (dataset, 'mf' if is_mf else 'sf', method)
-#    pair_frags('data/chembl_corpus.txt', out + '.txt', method=method, is_mf=is_mf)
-#    pair_frags('data/ligand_corpus.txt', out + '.txt', method=method, is_mf=is_mf)
-#    train_test_split('data/chembl_mf_brics.txt', 'data/chembl_mf_brics')
+    outChem = 'data/%s_%s_%s' % (dataset, 'mf' if is_mf else 'sf', method)
+    outLig = 'data/%s_%s_%s' % ('ligand', 'mf' if is_mf else 'sf', method)
+
+ 
+    pair_frags('data/chembl_corpus.txt', outChem + '.txt', method=method, is_mf=is_mf)
+
+    pair_frags('data/ligand_corpus.txt', outLig + '.txt', method=method, is_mf=is_mf)
+    
+    train_test_split('data/chembl_mf_brics.txt', 'data/chembl_mf_brics')
     train_test_split('data/ligand_mf_brics.txt', 'data/ligand_mf_brics')
+    
     for ds in ['train']:
-        pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
-        pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)
+        for out in [outChem, outLig]:
+            pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
+            pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)
     pos_neg_split()
