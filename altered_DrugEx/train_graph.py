@@ -90,8 +90,8 @@ if __name__ == "__main__":
     root = 'output/%s_%s' % (alg, time.strftime('%y%m%d_%H%M%S', time.localtime()))
 
     os.mkdir(root)
-    copy2(alg + '_ex.py', root)
-    copy2(alg + '.py', root)
+#     copy2(alg + '_ex.py', root)
+#     copy2(alg + '.py', root)
 
     pretrain()
     train_ex()
