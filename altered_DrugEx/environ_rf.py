@@ -369,8 +369,10 @@ def cross_validation(X, y, X_ind, y_ind, alg='DNN', out=None, reg=False):
 if __name__ == '__main__':
     pair = ['Target_ChEMBL_ID', 'Smiles', 'pChEMBL_Value', 'Comment',
             'Standard_Type', 'Standard_Relation', 'Document_Year']
-    BATCH_SIZE = int(2 ** 11)
-    N_EPOCH = 1000
+#     BATCH_SIZE = int(2 ** 11)
+    BATCH_SIZE = int(2 ** 7)
+#     N_EPOCH = 1000
+    N_EPOCH = 500
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     th= 6.5
