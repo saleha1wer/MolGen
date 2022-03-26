@@ -267,7 +267,7 @@ if __name__ == '__main__':
     train_test_split('data/chembl_mf_brics.txt', 'data/chembl_mf_brics')
     train_test_split('data/ligand_mf_brics.txt', 'data/ligand_mf_brics')
     
-    for ds in ['train']:
+    for ds in ['train','test']:
         for out in [outChem, outLig]:
             pair_graph_encode(out + '_%s.txt' % ds, voc, out + '_%s_code.txt' % ds)
             pair_smiles_encode(out + '_%s.txt' % ds, voc_smi, out + '_%s_smi.txt' % ds)
