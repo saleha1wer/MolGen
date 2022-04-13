@@ -42,7 +42,7 @@ class QSARDataset:
         test_size (int or float), optional: Used when timesplit is None
                                             If float, should be between 0.0 and 1.0 and is proportion of dataset to
                                             include in test split. If int, represents absolute number of test samples.
-        th (float)                : threshold for activity if classficiation model, ignored otherwise
+        th (float)                : threshold for activity if classificiation model, ignored otherwise
         keep_low_quality (bool)   : if true low quality data is included in the dataset
         X (np.ndarray)            : m x n feature matrix for cross validation, where m is the number of samples
                                     and n is the number of features.
@@ -56,7 +56,7 @@ class QSARDataset:
         Methods
         -------
         split_dataset : A train and test split is made.
-        create_folds: folds is an generator and needs to be reset after cross validation or hyperparameter optimization
+        create_folds: folds is a generator and needs to be reset after cross validation or hyperparameter optimization
         data_standardization: Performs standardization by centering and scaling
     """
     def __init__(self, base_dir, input, target, reg=True, timesplit=None, test_size=0.1, th=6.5, keep_low_quality=False):

@@ -1,5 +1,8 @@
 # TAKEN FROM JOHN BRADSHAW TUTORIAL - ML FOR MOLECULES --------------------
 import torch
+import numpy as np
+from rdkit import Chem
+import typing
 
 class SymbolFeaturizer:
     """
@@ -103,13 +106,11 @@ class Graphs:
         return new_graph
 
     @classmethod
-    def from_smiles_string(cls, smiles_str: str):
+    def from_mol(cls, mol):
         """
         Converts a SMILES string into the representation required by this datastructure.
-        Making use of the code you wrote in Section 2!
         """
         # Convert to form we need using previous code:
-        mol = Chem.MolFromSmiles(smiles_str)
         node_features, edge_list, edge_features = mol_to_edge_list_graph(mol, cls.ATOM_FEATURIZER)
         edge_features = [cls.BOND_FEATURIZER(elem) for elem in edge_features]
         # ^ nb here we're converting the edge feature list into one-hot form
@@ -222,4 +223,30 @@ class Graphs:
         return new_concatenated_graph
 
 
+def mol_to_edge_list_graph(mol: Chem.Mol, atm_featurizer: SymbolFeaturizer) -> typing.Tuple[
+    np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Function that takes in a RDKit molecule (of N atoms, E bonds) and returns three numpy arrays:
+    * the node features array (of dtype np.float32, shape [N, d]), which is a one hot encoding
+    of the element of each atom type.
+    * the edge list (of dtype np.int32, shape [2E, 2]) that represents the start and end index
+    of each edge.
+    * the edge feature list (of dtype np.float32, shape [2E, 1]) which describes the feature type
+    associated with each edge.
+    """
+    # Node features
+    node_features = [atm_featurizer(atm.GetSymbol()) for atm in mol.GetAtoms()]
+    node_features = np.array(node_features, dtype=np.float32)
 
+    # Edge list and edge feature list
+    edge_list = []
+    edge_feature_list = []
+    for bnd in mol.GetBonds():
+        bnd_indices = [bnd.GetBeginAtomIdx(), bnd.GetEndAtomIdx()]
+        bnd_type = bnd.GetBondTypeAsDouble()
+        edge_list.extend([bnd_indices, bnd_indices[::-1]])
+        edge_feature_list.extend([bnd_type, bnd_type])
+    edge_list = np.array(edge_list, dtype=np.int32)
+    edge_feature_list = np.array(edge_feature_list, dtype=np.float32)
+
+    return node_features, edge_list, edge_feature_list

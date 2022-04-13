@@ -19,6 +19,7 @@ rdBase.DisableLog('rdApp.warning')
 
 
 
+
 def load_molecules(base_dir, input_file):
     """
     Loads raw SMILES from input file and transform to rdkit molecule
@@ -88,46 +89,46 @@ def standardize_mol(mols):
     return smiles
 
 
-def corpus(base_dir, smiles, output, voc_file, save_voc=True):
-    """
-    Tokenizes SMILES and returns corpus of tokenized SMILES and vocabulary of all the unique tokens
-    Arguments:
-        base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing dataset
-        smiles  (str)             : list of standardized SMILES
-        output (str)              : name of output corpus file
-        voc_file (str)            : name of output voc_file
-        save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
-    """
-
-    print('Creating the corpus...')
-    voc = VocSmiles()
-    # set of unique tokens
-    words = set()
-    # original SMILES
-    canons = []
-    # tokenized SMILES
-    tokens = []
-    for smile in tqdm(smiles):
-        if len(smile) <= 100 or len(smile) > 10:
-        token = voc.split(smile)
-        # keep SMILES within certain length
-        if 10 < len(token) <= 100:
-            words.update(token)
-            canons.append(smile)
-            tokens.append(' '.join(token))
-
-    # save voc file
-    if save_voc:
-        print('Saving vocabulary...')
-        log = open(base_dir + '/data/%s_smiles.txt' % voc_file, 'w')
-        log.write('\n'.join(sorted(words)))
-        log.close()
-
-    log = pd.DataFrame()
-    log['Smiles'] = canons
-    log['Token'] = tokens
-    log.drop_duplicates(subset='Smiles')
-    log.to_csv(base_dir + '/data/' + output + '_corpus.txt', sep='\t', index=False)
+# def corpus(base_dir, smiles, output, voc_file, save_voc=True):
+#     """
+#     Tokenizes SMILES and returns corpus of tokenized SMILES and vocabulary of all the unique tokens
+#     Arguments:
+#         base_dir (str)            : base directory, needs to contain a folder data with .tsv file containing dataset
+#         smiles  (str)             : list of standardized SMILES
+#         output (str)              : name of output corpus file
+#         voc_file (str)            : name of output voc_file
+#         save_voc (bool)           : if true save voc file (should only be true for the pre-training set)
+#     """
+#
+#     print('Creating the corpus...')
+#     voc = VocSmiles()
+#     # set of unique tokens
+#     words = set()
+#     # original SMILES
+#     canons = []
+#     # tokenized SMILES
+#     tokens = []
+#     for smile in tqdm(smiles):
+#         if len(smile) <= 100 or len(smile) > 10:
+#         token = voc.split(smile)
+#         # keep SMILES within certain length
+#         if 10 < len(token) <= 100:
+#             words.update(token)
+#             canons.append(smile)
+#             tokens.append(' '.join(token))
+#
+#     # save voc file
+#     if save_voc:
+#         print('Saving vocabulary...')
+#         log = open(base_dir + '/data/%s_smiles.txt' % voc_file, 'w')
+#         log.write('\n'.join(sorted(words)))
+#         log.close()
+#
+#     log = pd.DataFrame()
+#     log['Smiles'] = canons
+#     log['Token'] = tokens
+#     log.drop_duplicates(subset='Smiles')
+#     log.to_csv(base_dir + '/data/' + output + '_corpus.txt', sep='\t', index=False)
 
 
 def DatasetArgParser(txt=None):

@@ -19,7 +19,7 @@ from tqdm import tqdm
 
 rdBase.DisableLog('rdApp.error')
 
-
+# why is this called predictor?
 class Predictor:
     def __init__(self, path, type='CLS'):
         self.type = type
