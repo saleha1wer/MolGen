@@ -250,3 +250,24 @@ def mol_to_edge_list_graph(mol: Chem.Mol, atm_featurizer: SymbolFeaturizer) -> t
     edge_feature_list = np.array(edge_feature_list, dtype=np.float32)
 
     return node_features, edge_list, edge_feature_list
+
+
+def collate_for_graphs(batch):
+    """
+    This is a custom collate function for use minibatches of graphs along with their regression value.
+    It ensures that we concatenate graphs correctly.
+
+    Look at ss_utils to see how this gets used.
+    """
+    # Split up the graphs and the y values
+    list_of_graphs, list_of_targets = zip(*batch)
+    list_of_graphs = list(list_of_graphs)
+    list_of_targets = list(list_of_targets)
+
+    # The graphs need to be concatenated (i.e. collated) using the function you wrote
+    graphs = Graphs.concatenate(list_of_graphs)
+
+    # The y values can use the default collate function as before.
+    targets = data.dataloader.default_collate(list_of_targets)
+
+    return graphs, targets
