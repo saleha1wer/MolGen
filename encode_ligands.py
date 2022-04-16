@@ -109,8 +109,8 @@ def encode_ligands(path,atm_featurizer):
     print(len(mols), 'ligands read after removing nans') 
     # Make X --> (node_features, edge_list, edge_features) and y --> af_values arrays
     X,y = smiles_to_graph(mols, af_values,atm_featurizer)
-    np.save('ligands_encoded',X)
-    np.save('affinity_values',y)
+    np.save('data/ligands_encoded',X)
+    np.save('data/affinity_values',y)
 
 
 
