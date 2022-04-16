@@ -109,7 +109,7 @@ def encode_ligands(path,atm_featurizer):
     print(len(mols), 'ligands read after removing nans') 
     # Make X --> (node_features, edge_list, edge_features) and y --> af_values arrays
     X,y = smiles_to_graph(mols, af_values,atm_featurizer)
-    np.save('data/ligands_encoded',X)
+    np.save('data/ligand_processed',X)
     np.save('data/affinity_values',y)
 
 
@@ -121,5 +121,6 @@ if __name__ == '__main__':
     vocab = np.array(vocab).ravel()
     atm_featurizer = SymbolFeaturizer(vocab)
     encode_ligands(path,atm_featurizer)
+    
     # print(np.load('affinity_values.npy',allow_pickle=True))
-    # print(np.load('ligands_encoded.npy',allow_pickle=True))
+    # print(np.load('ligand_processed.npy',allow_pickle=True))
