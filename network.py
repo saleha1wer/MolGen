@@ -1,4 +1,6 @@
-# THIS WORK IS FROM JOHN BRADSHAW
+# THIS WORK IS FROM JOHN BRADSHAW - https://github.com/john-bradshaw/ml-in-bioinformatics-summer-school-2020
+## THIS SCRIPT INCLUDES HOW TO TRAIN A GNN AND AN EXAMPLE GNN (AND PLOTTING)
+
 import time
 import typing
 import collections

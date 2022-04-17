@@ -1,4 +1,7 @@
-# TAKEN FROM JOHN BRADSHAW TUTORIAL - ML FOR MOLECULES --------------------
+# TAKEN FROM JOHN BRADSHAW TUTORIAL - ML FOR MOLECULES ----- https://github.com/john-bradshaw/ml-in-bioinformatics-summer-school-2020
+# TRANSLATES RDKIT.MOL OBJECTS TO GRAPHS
+
+
 import torch
 import numpy as np
 from rdkit import Chem
