@@ -1,11 +1,10 @@
 from email.utils import encode_rfc2231
-import imp
 from os import remove
 import pandas as pd 
 import rdkit.Chem as Chem
 import numpy as np
 import math
-
+import gzip
 
 # for line in file 
 # get smiles str 
@@ -41,10 +40,14 @@ def remove_nan(mols,af_values):
     af_values = np.delete(af_values,nan_idx)
     return mols,af_values
 
-def read_mols_values(dataframe):
-    
-    mols = np.array(dataframe["Smiles"])
-    af_values = np.array(dataframe['pChEMBL_Value'])
+def read_mols_values(dataframe,gz=False):
+    if gz:
+        mols = np.array(dataframe["SMILES"])
+        af_values = np.array(dataframe['pchembl_value'])
+
+    else:
+        mols = np.array(dataframe["Smiles"])
+        af_values = dataframe['pChEMBL_Value']
 
     nan_idx = []
     for idx,mol in enumerate(mols):
@@ -54,8 +57,8 @@ def read_mols_values(dataframe):
     mols = np.delete(mols,nan_idx)
     af_values = np.delete(af_values,nan_idx)
 
-
     mols = np.array([Chem.MolFromSmiles(mol) for mol in mols])
+    print(mols[3])
     return mols,af_values
 
 
@@ -80,7 +83,7 @@ def mol_to_edge_list_graph(mol, atm_featurizer):
 
     
 
-def smiles_to_graph(smiles,values,atm_featurizer):
+def smiles_to_graph(smiles,values,atm_featurizer,gz=False):
     # smiles is a list of mols in smiles representation 
     # returns array of (node_features, edge_list, edge_features,af_value) rows
     X = []
@@ -94,28 +97,44 @@ def smiles_to_graph(smiles,values,atm_featurizer):
         except Exception as e:
             print(e)
 
-        
-    return np.array(X,dtype=object), np.array(y,dtype=object)
-
+    if gz:
+        return np.array(X,dtype=object)
+    else:
+        return np.array(X,dtype=object), np.array(y,dtype=object)
 
 
 def encode_ligands(path,atm_featurizer):
     # Load raw ligands
+    if path.endswith('.gz'):
+        gz = True
+    else:
+        gz = False
     df = pd.read_csv(path, sep='\t')
-    # Get smiles strings and affinity values
-    mols, af_values = read_mols_values(df) 
+    mols,af_values = read_mols_values(df,gz=gz) 
+
     # Remove ligands with affinity nan
-    mols, af_values = remove_nan(mols,af_values)
-    print(len(mols), 'ligands read after removing nans') 
+
+    # mols, af_values = remove_nan(mols,af_values)
+    # print(len(mols), 'ligands read after removing nans') 
+
     # Make X --> (node_features, edge_list, edge_features) and y --> af_values arrays
-    X,y = smiles_to_graph(mols, af_values,atm_featurizer)
-    np.save('data/ligand_processed',X)
-    np.save('data/affinity_values',y)
+
+    if gz:
+        X = smiles_to_graph(mols, af_values,atm_featurizer,gz=True)
+        np.save('data/papyrus_ligand_processed',X)
+        np.save('data/papyrus_affinity_values',af_values)
+    else:
+        X,y = smiles_to_graph(mols, af_values,atm_featurizer)
+        np.save('data/ligand_processed',X)
+        np.save('data/affinity_values',y)
 
 
 
 if __name__ == '__main__':
     path = 'data/LIGAND_RAW.tsv'
+    # path = 'data/Papyrus.tsv.gz'
+    
+    
     voc_path = 'data/ligand_voc.txt'
     vocab = pd.read_csv(voc_path, sep='\t')
     vocab = np.array(vocab).ravel()
