@@ -30,6 +30,7 @@ def main():
         ## read SMILES
         print('Could not load data. \n Processing data.')
 
+
         df = pd.read_csv('DrugEx/data/LIGAND_RAW.tsv', sep='\t', header=0)
         df = df[['Smiles', 'pChEMBL_Value']]
         df = df.dropna(axis=0)  # drop rows with missing values
@@ -39,6 +40,7 @@ def main():
         PandasTools.AddMoleculeColumnToFrame(df,'Smiles','Molecule',includeFingerprints=False)
         df['Smiles'] = df['Smiles'].map(canonical_smiles)
         df = df.drop_duplicates(subset=['Smiles'])
+        print('Finished Smiles processing')
 
 
         # REGRESSION TARGET VALUES
@@ -47,10 +49,12 @@ def main():
 
         # FEATURIZATION OF MOLECULES
         fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEX method)
+        print('Finished calculating fingerprints')
 
         graphs = np.array([[]])  # TUTORIAL METHOD (JOHN BRADSHAW)
         for mol in df['Molecule']:
             graphs = np.append(graphs, Graphs.from_mol(mol))
+        print('Finished making graphs')
 
         # SAVING FEAUTRIZED MOLECULES
         with open('data/ligand_processed.npy', 'wb') as f:
@@ -74,8 +78,8 @@ def main():
     # GNN METHOD
     gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
 
-    # # train_neural_network in network.py script!
-    # # we need graphs to be a torch.data.Dataloader
+    # # train_neural_network in network.py script
+    # # we need graphs to be a torch.data.Dataloader (?)
     ### out = train_neural_network(train_dataset=graphs_train_dataloader, val_dataset=graphs_val_dataloader #...ETC)
 
     plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
