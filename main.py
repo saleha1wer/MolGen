@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from xgboost import XGBRegressor
 from mol2graph import Graphs
-from network import GNN, train_neural_network, plot_train_and_val_using_altair
+from network import GNN, train_neural_network, plot_train_and_val_using_altair, collate_for_graphs
 
 
 def canonical_smiles(smi):
@@ -21,14 +21,17 @@ def main():
         with open('data/ligand_processed.npy', 'rb') as f:
             print('Loading data')
             target_values = np.load(f)
+            print('loaded target values')
             fps = np.load(f)
-            graphs = np.load(f)
-            print(graphs)
+            print('loaded fingerprints')
+            graphs = np.load(f, allow_pickle=True)  # consists of Graphs objects, require pickle
+            print('loaded graphs')
+            print('Successfully loaded data')
 
     except:
 
         ## read SMILES
-        print('Could not load data. \n Processing data.')
+        print('Could not load data. \nProcessing data.')
 
 
         df = pd.read_csv('DrugEx/data/LIGAND_RAW.tsv', sep='\t', header=0)
@@ -37,10 +40,13 @@ def main():
         # smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
         #     .replace('[N]', 'N').replace('[B]', 'B') \
         #     .replace('[2H]', '[H]').replace('[3H]', '[H]')
-        PandasTools.AddMoleculeColumnToFrame(df,'Smiles','Molecule',includeFingerprints=False)
         df['Smiles'] = df['Smiles'].map(canonical_smiles)
         df = df.drop_duplicates(subset=['Smiles'])
-        print('Finished Smiles processing')
+        print('Finished preprocessing Smiles')
+
+        PandasTools.AddMoleculeColumnToFrame(df,'Smiles','Molecule',includeFingerprints=False)
+        print('Processed Smiles to Mol object')
+
 
 
         # REGRESSION TARGET VALUES
@@ -48,7 +54,7 @@ def main():
 
 
         # FEATURIZATION OF MOLECULES
-        fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEX method)
+        fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEx method)
         print('Finished calculating fingerprints')
 
         graphs = np.array([[]])  # TUTORIAL METHOD (JOHN BRADSHAW)
@@ -56,7 +62,7 @@ def main():
             graphs = np.append(graphs, Graphs.from_mol(mol))
         print('Finished making graphs')
 
-        # SAVING FEAUTRIZED MOLECULES
+        # SAVING FEATURIZED MOLECULES
         with open('data/ligand_processed.npy', 'wb') as f:
             np.save(f, target_values)
             np.save(f, fps)
@@ -65,22 +71,24 @@ def main():
 
     # MAKING TRAIN AND TEST SET (validation?)
     y_train, y_test, fps_train, fps_test, graphs_train, graphs_test = train_test_split(target_values, fps, graphs, test_size=0.2)
+    print(y_train.shape, '\n', fps_train.shape, graphs_train.shape)
 
-
-    # THIS USES DRUGEX METHOD - FOR BENCHMARKING
-    xgb = XGBRegressor()
-    xgb.fit(fps_train, y_train)
-
-    y_test_pred = xgb.predict(fps_test)
-    print(mean_squared_error(y_test, y_test_pred))
+    # # THIS USES DRUGEX METHOD - AS BASELINE
+    # xgb = XGBRegressor()
+    # xgb.fit(fps_train, y_train)
+    #
+    # y_test_pred = xgb.predict(fps_test)
+    # print(mean_squared_error(y_test, y_test_pred))
 
 
     # GNN METHOD
     gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
 
+    graphs_train_dataset = np.append(graphs_train.reshape(-1,1), y_train.reshape(-1, 1), axis=1)
+    graphs_test_dataset = np.append(graphs_test.reshape(-1,1), y_test.reshape(-1, 1), axis=1)
     # # train_neural_network in network.py script
     # # we need graphs to be a torch.data.Dataloader (?)
-    ### out = train_neural_network(train_dataset=graphs_train_dataloader, val_dataset=graphs_val_dataloader #...ETC)
+    out = train_neural_network(train_dataset=graphs_train_dataset, val_dataset=graphs_test_dataset, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
 
     plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
     # print(graphs.shape)
