@@ -91,8 +91,6 @@ class TrainParams:
 
 
 def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
-                          smiles_col:str, regression_column:str,
-                         transform: typing.Callable,
                          neural_network: nn.Module,
                          params: typing.Optional[TrainParams]=None,
                          collate_func: typing.Optional[typing.Callable]=None):
@@ -114,9 +112,10 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
 
 
     # Update the train and valid datasets with new parameters
-    train_dataset = SmilesRegressionDataset.create_from_df(train_df, smiles_col, regression_column, transform=transform)
-    val_dataset = SmilesRegressionDataset.create_from_df(val_df, smiles_col, regression_column, transform=transform)
     print(f"Train dataset is of size {len(train_dataset)} and valid of size {len(val_dataset)}")
+
+    train_dataset[:,1].astype(np.float32)
+    val_dataset[:,1].astype(np.float32)
 
     # Put into dataloaders
     train_dataloader = data.DataLoader(train_dataset, params.batch_size, shuffle=True,
@@ -179,6 +178,7 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
         val_times_list.append(e_time - s_time)
 
     # We can now train our network!
+    print('Marker')
     trainer.run(train_dataloader, max_epochs=params.num_epochs)
 
     # Having trained it wee are now also going to run through the validation set one
@@ -212,6 +212,28 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
         val_predictions=val_predictions
     )
     return results
+
+
+def collate_for_graphs(batch):
+    """
+    This is a custom collate function for use minibatches of graphs along with their regression value.
+    It ensures that we concatenate graphs correctly.
+
+    Look at ss_utils to see how this gets used.
+    """
+    # Split up the graphs and the y values
+    list_of_graphs, list_of_targets = zip(*batch)
+    list_of_graphs = list(list_of_graphs)
+    list_of_targets = list(list_of_targets)
+
+    # The graphs need to be concatenated (i.e. collated) using the function you wrote
+    graphs = Graphs.concatenate(list_of_graphs)
+
+    # The y values can use the default collate function as before.
+    targets = torch.utils.data.dataloader.default_collate(list_of_targets)
+
+    return graphs, targets
+
 
 
 def plot_train_and_val_using_altair(train_loss, val_loss):
