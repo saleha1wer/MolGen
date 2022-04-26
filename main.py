@@ -21,6 +21,7 @@ def main():
         with open('data/ligand_processed.npy', 'rb') as f:
             print('Loading data')
             target_values = np.load(f)
+            target_values = target_values.astype(np.float32)
             print('loaded target values')
             fps = np.load(f)
             print('loaded fingerprints')
@@ -84,12 +85,17 @@ def main():
     # GNN METHOD
     gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
 
-    graphs_train_dataset = np.append(graphs_train.reshape(-1,1), y_train.reshape(-1, 1), axis=1)
-    graphs_test_dataset = np.append(graphs_test.reshape(-1,1), y_test.reshape(-1, 1), axis=1)
+    graphs_train = pd.DataFrame(graphs_train)
+    graphs_train['target'] = y_train
+
+    graphs_val = pd.DataFrame(graphs_test)
+    graphs_val['target'] = y_test
+    # graphs_train_dataset = np.append(graphs_train.reshape(-1,1), y_train.reshape(-1, 1), axis=1)
+    # graphs_test_dataset = np.append(graphs_test.reshape(-1,1), y_test.reshape(-1, 1), axis=1)
     # # train_neural_network in network.py script
     # # we need graphs to be a torch.data.Dataloader (?)
-    out = train_neural_network(train_dataset=graphs_train_dataset, val_dataset=graphs_test_dataset, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
-
+    out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
+    #
     plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
     # print(graphs.shape)
     # print(graphs[0])
