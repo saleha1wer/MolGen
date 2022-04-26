@@ -85,11 +85,9 @@ def main():
     # GNN METHOD
     gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
 
-    graphs_train = pd.DataFrame(graphs_train)
-    graphs_train['target'] = y_train
+    graphs_train = pd.DataFrame({'x': graphs_train, 'y': y_train})
+    graphs_val = pd.DataFrame({'x': graphs_test, 'y': y_test})
 
-    graphs_val = pd.DataFrame(graphs_test)
-    graphs_val['target'] = y_test
     # graphs_train_dataset = np.append(graphs_train.reshape(-1,1), y_train.reshape(-1, 1), axis=1)
     # graphs_test_dataset = np.append(graphs_test.reshape(-1,1), y_test.reshape(-1, 1), axis=1)
     # # train_neural_network in network.py script
