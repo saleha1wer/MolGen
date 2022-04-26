@@ -5,7 +5,7 @@ import time
 import typing
 import collections
 import itertools
-from mol2graph import Graphs
+from mol2graph import Graphs, GraphRegressionDataset
 from dataclasses import dataclass
 
 import altair as alt
@@ -110,12 +110,11 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
         params = TrainParams()
 
 
-
     # Update the train and valid datasets with new parameters
     print(f"Train dataset is of size {len(train_dataset)} and valid of size {len(val_dataset)}")
 
-    train_dataset[:,1].astype(np.float32)
-    val_dataset[:,1].astype(np.float32)
+    train_dataset = GraphRegressionDataset.create_from_df(train_dataset)
+    val_dataset = GraphRegressionDataset.create_from_df(val_dataset)
 
     # Put into dataloaders
     train_dataloader = data.DataLoader(train_dataset, params.batch_size, shuffle=True,
