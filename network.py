@@ -8,10 +8,10 @@ import itertools
 from mol2graph import Graphs, GraphRegressionDataset
 from dataclasses import dataclass
 
-import altair as alt
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import altair as alt
 
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -27,6 +27,14 @@ from ignite.metrics import Accuracy, Loss, RunningAverage
 
 from ignite.contrib.handlers import ProgressBar
 
+
+@dataclass
+class TrainParams:
+    batch_size: int = 64
+    val_batch_size: int = 64
+    learning_rate: float = 2e-3
+    num_epochs: int = 1
+    device: typing.Optional[str] = 'cpu'
 
 class GNN(nn.Module):
     def __init__(self, node_feature_dimension, num_propagation_steps :int =4):
@@ -81,13 +89,7 @@ class GNN(nn.Module):
         return final_prediction
 
 
-@dataclass
-class TrainParams:
-    batch_size: int = 64
-    val_batch_size: int = 64
-    learning_rate: float = 1e-3
-    num_epochs: int = 10
-    device: typing.Optional[str] = 'cpu'
+
 
 
 def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
@@ -287,3 +289,19 @@ def plot_train_and_val_using_altair(train_loss, val_loss):
     ).properties(
         width=600, height=300
     )
+
+
+def plot_train_and_val_using_mpl(train_loss, val_loss):
+    """
+    Plots the train and validation loss using Matplotlib
+    """
+    assert len(train_loss) == len(val_loss)
+
+    f, ax = plt.subplots()
+    x = np.arange(len(train_loss))
+    ax.plot(x, np.array(train_loss), label='train')
+    ax.plot(x, np.array(val_loss), label='val')
+    ax.legend()
+    ax.set_ylabel('loss')
+    ax.set_xlabel('epoch')
+    return f, ax

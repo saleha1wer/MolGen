@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from altair_saver import save
 from rdkit import Chem
 from rdkit.Chem import PandasTools
 from mol2fingerprint import calc_fps
@@ -7,8 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from xgboost import XGBRegressor
 from mol2graph import Graphs
-from network import GNN, train_neural_network, plot_train_and_val_using_altair, collate_for_graphs
-
+from network import GNN, train_neural_network, plot_train_and_val_using_altair, collate_for_graphs, plot_train_and_val_using_mpl
 
 def canonical_smiles(smi):
     return Chem.MolToSmiles(Chem.MolFromSmiles(smi), canonical=True)
@@ -93,13 +94,14 @@ def main():
     # # train_neural_network in network.py script
     # # we need graphs to be a torch.data.Dataloader (?)
     out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
-    #
-    plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
-    # print(graphs.shape)
-    # print(graphs[0])
-    #
-    # print(df.describe())
-    # print(df.head())
+
+
+    # plot = plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
+    # save(plot, 'chart_lr=2e-3.png')  # .pdf doesn't work?
+
+    plot_train_and_val_using_mpl(out['train_loss_list'], out['val_lost_list'])
+    plt.savefig('char_lr=2e-3.pdf')
+
 
 
 if __name__ == '__main__':
