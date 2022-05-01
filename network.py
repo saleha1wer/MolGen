@@ -86,7 +86,7 @@ class TrainParams:
     batch_size: int = 64
     val_batch_size: int = 64
     learning_rate: float = 1e-3
-    num_epochs: int = 10
+    num_epochs: int = 100
     device: typing.Optional[str] = 'cpu'
 
 
