@@ -5,7 +5,7 @@ import time
 import typing
 import collections
 import itertools
-from mol2graph import Graphs, GraphRegressionDataset
+from utils.mol2graph import Graphs, GraphRegressionDataset
 from dataclasses import dataclass
 
 import pandas as pd
@@ -89,7 +89,6 @@ class GNN(nn.Module):
         return final_prediction
 
 
-<<<<<<< HEAD
 @dataclass
 class TrainParams:
     batch_size: int = 64
@@ -97,9 +96,6 @@ class TrainParams:
     learning_rate: float = 1e-3
     num_epochs: int = 100
     device: typing.Optional[str] = 'cpu'
-=======
-
->>>>>>> d8278fd550f2a61273ce88338fd0b33cc226e277
 
 
 def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,

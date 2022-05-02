@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 from altair_saver import save
 from rdkit import Chem
 from rdkit.Chem import PandasTools
-from mol2fingerprint import calc_fps
+from utils.mol2fingerprint import calc_fps
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from xgboost import XGBRegressor
-from mol2graph import Graphs
+from utils.mol2graph import Graphs
 from network import GNN, train_neural_network, plot_train_and_val_using_altair, collate_for_graphs, plot_train_and_val_using_mpl
 
 def canonical_smiles(smi):
