@@ -16,20 +16,7 @@ def canonical_smiles(smi):
 
 def main():
     try:
-        # with open('data/ligand_processed.npy', 'rb') as f:
-        #     print('Loading data')
-        #     target_values = np.load(f)
-        #     target_values = target_values.astype(np.float32)
-        #     print('loaded target values')
-        #     fps = np.load(f)
-        #     print('loaded fingerprints')
-        #     graphs = np.load(f, allow_pickle=True)  # consists of Graphs objects, require pickle
-        #     print('loaded graphs')
-        #     print('Successfully loaded data')
-
-        # df = pd.read_pickle('data/papyrus_ligand.zip')
-        df = pd.read_csv('data/papyrus_ligand')
-
+        df = pd.read_pickle('data/papyrus_ligand.zip')
         df = df[['SMILES', 'pchembl_value_Mean']]
         df = df.dropna(axis=0) 
         df['SMILES'] = df['SMILES'].map(canonical_smiles)
@@ -45,11 +32,6 @@ def main():
             graphs = np.append(graphs, Graphs.from_mol(mol))
         print('Finished making graphs')
 
-        # SAVING FEATURIZED MOLECULES
-        # with open('data/ligand_processed.npy', 'wb') as f:
-        #     np.save(f, target_values)
-        #     np.save(f, fps)
-        #     np.save(f, graphs)
     except Exception as e:
         ## read SMILES
         print('Could not load data. \nProcessing data.',e)
@@ -79,22 +61,10 @@ def main():
             graphs = np.append(graphs, Graphs.from_mol(mol))
         print('Finished making graphs')
 
-        # # SAVING FEATURIZED MOLECULES
-        # with open('data/ligand_processed.npy', 'wb') as f:
-        #     np.save(f, target_values)
-        #     np.save(f, fps)
-        #     np.save(f, graphs)
 
     # MAKING TRAIN AND TEST SET (validation?)
     y_train, y_test, fps_train, fps_test, graphs_train, graphs_test = train_test_split(target_values, fps, graphs, test_size=0.2)
     print(y_train.shape, '\n', fps_train.shape, graphs_train.shape)
-
-    # # THIS USES DRUGEX METHOD - AS BASELINE
-    # xgb = XGBRegressor()
-    # xgb.fit(fps_train, y_train)
-    #
-    # y_test_pred = xgb.predict(fps_test)
-    # print(mean_squared_error(y_test, y_test_pred))
 
 
     # GNN METHOD
@@ -103,10 +73,6 @@ def main():
     graphs_train = pd.DataFrame({'x': graphs_train, 'y': y_train})
     graphs_val = pd.DataFrame({'x': graphs_test, 'y': y_test})
 
-    # graphs_train_dataset = np.append(graphs_train.reshape(-1,1), y_train.reshape(-1, 1), axis=1)
-    # graphs_test_dataset = np.append(graphs_test.reshape(-1,1), y_test.reshape(-1, 1), axis=1)
-    # # train_neural_network in network.py script
-    # # we need graphs to be a torch.data.Dataloader (?)
     out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
 
 

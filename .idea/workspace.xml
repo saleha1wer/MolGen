@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="req.txt">
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectId" id="27k1UZtVYWJVtmv29hcyldwLgSN" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.main">
+    <configuration name="altair_test" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="GenMol" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/envs/Gprotein-affinity-prediction/bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/altair_test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="GenMol" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/opt/anaconda3/envs/Gprotein-affinity-prediction/bin/python3" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.main" />
+      <item itemvalue="Python.altair_test" />
+    </list>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="" />
+      <created>1649849286431</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1649849286431</updated>
+      <workItem from="1649849288058" duration="9315000" />
+      <workItem from="1650011183137" duration="6331000" />
+      <workItem from="1650029448867" duration="471000" />
+      <workItem from="1650030791123" duration="2674000" />
+      <workItem from="1650105293928" duration="6257000" />
+      <workItem from="1650121051638" duration="55000" />
+      <workItem from="1650122822733" duration="127000" />
+      <workItem from="1650200461725" duration="1141000" />
+      <workItem from="1650201735492" duration="45000" />
+      <workItem from="1650202058834" duration="465000" />
+      <workItem from="1650274523987" duration="2630000" />
+      <workItem from="1650355211565" duration="4494000" />
+      <workItem from="1650444053467" duration="1200000" />
+      <workItem from="1650624492602" duration="338000" />
+      <workItem from="1650961726251" duration="12914000" />
+      <workItem from="1650982481831" duration="1249000" />
+      <workItem from="1650983816884" duration="4704000" />
+      <workItem from="1650996677034" duration="3357000" />
+      <workItem from="1651134293773" duration="81000" />
+      <workItem from="1651147751598" duration="2770000" />
+      <workItem from="1651151458203" duration="836000" />
+      <workItem from="1651226051482" duration="33000" />
+      <workItem from="1651418472763" duration="1144000" />
+      <workItem from="1651490176697" duration="116000" />
+      <workItem from="1651590907159" duration="433000" />
+      <workItem from="1651591599431" duration="239000" />
+      <workItem from="1651660891804" duration="642000" />
+    </task>
+    <task id="LOCAL-00001" summary="recent update">
+      <created>1649860827868</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1649860827868</updated>
+    </task>
+    <task id="LOCAL-00002" summary="renaming transform function">
+      <created>1650033100001</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1650033100001</updated>
+    </task>
+    <task id="LOCAL-00003" summary="adding collate function">
+      <created>1650033133622</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1650033133622</updated>
+    </task>
+    <task id="LOCAL-00004" summary="pasting TrainParams class, train_neural_network function, and plot_train_and_val_using_altair">
+      <created>1650033194613</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1650033194613</updated>
+    </task>
+    <task id="LOCAL-00005" summary="file for storing processed ligand data">
+      <created>1650033210508</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1650033210508</updated>
+    </task>
+    <task id="LOCAL-00006" summary="file for storing processed ligand data, formatting may be still be changed in main.py">
+      <created>1650033235929</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1650033235929</updated>
+    </task>
+    <task id="LOCAL-00007" summary="include try to load processed data">
+      <created>1650033287805</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1650033287805</updated>
+    </task>
+    <task id="LOCAL-00008" summary="comments for main.py">
+      <created>1650114849500</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1650114849500</updated>
+    </task>
+    <task id="LOCAL-00009" summary="create empty file to put ligand_processed data">
+      <created>1650114884298</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1650114884298</updated>
+    </task>
+    <task id="LOCAL-00010" summary="some more comments">
+      <created>1650200525279</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1650200525279</updated>
+    </task>
+    <task id="LOCAL-00011" summary="some more comments">
+      <created>1650201231166</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1650201231166</updated>
+    </task>
+    <task id="LOCAL-00012" summary="main.py update and creating ligand_processed.npy">
+      <created>1650966910469</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1650966910471</updated>
+    </task>
+    <task id="LOCAL-00013" summary="main.py update - can load graphs objects">
+      <created>1650966988385</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1650966988385</updated>
+    </task>
+    <task id="LOCAL-00014" summary="moving collate_for_graphs to network.py">
+      <created>1650967058981</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1650967058981</updated>
+    </task>
+    <task id="LOCAL-00015" summary="tryin with pandas dataframe as dataset input to the datalaoder">
+      <created>1650974139979</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1650974139980</updated>
+    </task>
+    <task id="LOCAL-00016" summary="training network with pd.DataFrame">
+      <created>1650982556813</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1650982556813</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Adding GraphRegressionDataset class, alternative to SmilesRegressionDataset">
+      <created>1650982601722</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1650982601722</updated>
+    </task>
+    <task id="LOCAL-00018" summary="updated import">
+      <created>1650982619163</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1650982619163</updated>
+    </task>
+    <task id="LOCAL-00019" summary="matplotlib plotting">
+      <created>1651147928275</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1651147928275</updated>
+    </task>
+    <task id="LOCAL-00020" summary="environment.yml">
+      <created>1651149959653</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1651149959653</updated>
+    </task>
+    <task id="LOCAL-00021" summary="req.txt">
+      <created>1651150197203</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1651150197203</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="CUSTOM_BOOLEAN_PROPERTIES">
+                <map>
+                  <entry key="Show.Git.Branches" value="false" />
+                </map>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="recent update" />
+    <MESSAGE value="renaming transform function" />
+    <MESSAGE value="adding collate function" />
+    <MESSAGE value="pasting TrainParams class, train_neural_network function, and plot_train_and_val_using_altair" />
+    <MESSAGE value="file for storing processed ligand data" />
+    <MESSAGE value="file for storing processed ligand data, formatting may be still be changed in main.py" />
+    <MESSAGE value="include try to load processed data" />
+    <MESSAGE value="comments for main.py" />
+    <MESSAGE value="create empty file to put ligand_processed data" />
+    <MESSAGE value="some more comments" />
+    <MESSAGE value="main.py update and creating ligand_processed.npy" />
+    <MESSAGE value="main.py update - can load graphs objects" />
+    <MESSAGE value="moving collate_for_graphs to network.py" />
+    <MESSAGE value="tryin with pandas dataframe as dataset input to the datalaoder" />
+    <MESSAGE value="training network with pd.DataFrame" />
+    <MESSAGE value="Adding GraphRegressionDataset class, alternative to SmilesRegressionDataset" />
+    <MESSAGE value="updated import" />
+    <MESSAGE value="matplotlib plotting" />
+    <MESSAGE value="environment.yml" />
+    <MESSAGE value="req.txt" />
+    <option name="LAST_COMMIT_MESSAGE" value="req.txt" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>20</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/GenMol$altair_test.coverage" NAME="altair_test Coverage Results" MODIFIED="1650999060907" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/GenMol$main.coverage" NAME="main Coverage Results" MODIFIED="1651661029787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
