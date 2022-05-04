@@ -27,7 +27,9 @@ def main():
         #     print('loaded graphs')
         #     print('Successfully loaded data')
 
-        df = pd.read_pickle('data/papyrus_ligand.zip')
+        # df = pd.read_pickle('data/papyrus_ligand.zip')
+        df = pd.read_csv('data/papyrus_ligand')
+
         df = df[['SMILES', 'pchembl_value_Mean']]
         df = df.dropna(axis=0) 
         df['SMILES'] = df['SMILES'].map(canonical_smiles)
