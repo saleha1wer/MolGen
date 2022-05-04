@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from altair_saver import save
 from rdkit import Chem
 from rdkit.Chem import PandasTools
 from utils.mol2fingerprint import calc_fps
@@ -28,7 +27,7 @@ def main():
         #     print('loaded graphs')
         #     print('Successfully loaded data')
 
-        df = pd.read_pickle('papyrus_ligand.zip')
+        df = pd.read_pickle('data/papyrus_ligand.zip')
         df = df[['SMILES', 'pchembl_value_Mean']]
         df = df.dropna(axis=0) 
         df['SMILES'] = df['SMILES'].map(canonical_smiles)
