@@ -33,8 +33,16 @@ class TrainParams:
     batch_size: int = 64
     val_batch_size: int = 64
     learning_rate: float = 2e-3
-    num_epochs: int = 1
+    num_epochs: int = 100
+    device: typing.Optional[str] = 'cuda'
+
+class QuickParams:
+    batch_size: int = 64
+    val_batch_size: int = 64
+    learning_rate: float = 2e-3
+    num_epochs: int = 5
     device: typing.Optional[str] = 'cpu'
+
 
 class GNN(nn.Module):
     def __init__(self, node_feature_dimension, num_propagation_steps :int =4):
@@ -89,15 +97,6 @@ class GNN(nn.Module):
         return final_prediction
 
 
-@dataclass
-class TrainParams:
-    batch_size: int = 64
-    val_batch_size: int = 64
-    learning_rate: float = 1e-3
-    num_epochs: int = 100
-    device: typing.Optional[str] = 'cpu'
-
-
 def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
                          neural_network: nn.Module,
                          params: typing.Optional[TrainParams]=None,
@@ -134,6 +133,7 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
     optimizer = optim.Adam(neural_network.parameters(), lr=params.learning_rate)
 
     # Work out what device we're going to run on (ie CPU or GPU)
+    print('Starting training of NN on device: {}'.format(params.device))
     device = params.device
 
     # We're going to use PyTorch Ignite to take care of the majority of the training boilerplate for us
@@ -185,9 +185,9 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
         val_times_list.append(e_time - s_time)
 
     # We can now train our network!
-    print('Marker')
+    print('Starting training!')
     trainer.run(train_dataloader, max_epochs=params.num_epochs)
-
+    print('Done training!')
     # Having trained it wee are now also going to run through the validation set one
     # last time to get the actual predictions
     val_predictions = []
@@ -297,7 +297,7 @@ def plot_train_and_val_using_altair(train_loss, val_loss):
     )
 
 
-def plot_train_and_val_using_mpl(train_loss, val_loss):
+def plot_train_and_val_using_mpl(train_loss, val_loss, name=None, save=False):
     """
     Plots the train and validation loss using Matplotlib
     """
@@ -310,4 +310,10 @@ def plot_train_and_val_using_mpl(train_loss, val_loss):
     ax.legend()
     ax.set_ylabel('loss')
     ax.set_xlabel('epoch')
+    if save:
+        if name != None:
+            f.title(name)
+        else:
+            f.title('Anonymous plot')
+        plt.savefig(name + '.png')
     return f, ax
