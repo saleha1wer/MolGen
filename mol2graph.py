@@ -223,6 +223,55 @@ class Graphs:
         return new_concatenated_graph
 
 
+class GraphRegressionDataset(torch.utils.data.Dataset):
+    """
+    Dataset that holds SMILES molecule data along with an associated single
+    regression target.
+    """
+
+    def __init__(self, graph_list: Graphs,
+                 regression_target_list: typing.List[float],
+                 transform: typing.Optional[typing.Callable] = None):
+        """
+        :param graph_list: list of SMILES strings represnting the molecules
+        we are regressing on.
+        :param regression_target_list: list of targets
+        :param transform: an optional transform which will be applied to the
+        SMILES string before it is returned.
+        """
+        self.graph_list = graph_list
+        self.regression_target_list = regression_target_list
+        self.transform = transform
+
+        assert len(self.graph_list) == len(self.regression_target_list), \
+            "Dataset and targets should be the same length!"
+
+    def __getitem__(self, index):
+        x, y = self.graph_list[index], self.regression_target_list[index]
+        if self.transform is not None:
+            x = self.transform(x)
+        y = torch.tensor([y], dtype=torch.float32)
+        return x, y
+
+    def __len__(self):
+        return len(self.graph_list)
+
+    @classmethod
+    def create_from_df(cls, df: pd.DataFrame, graph_column: str = 'x',
+                       regression_column: str = 'y', transform=None):
+        """
+        convenience method that takes in a Pandas dataframe and turns it
+        into an   instance of this class.
+        :param df: Dataframe containing the data.
+        :param graph_column: name of column that contains the x data
+        :param regression_column: name of the column which contains the
+        y data (i.e. targets)
+        :param transform: a transform to pass to class's constructor
+        """
+        graph_list = [x for x in df[graph_column].tolist()]
+        targets = [float(y) for y in df[regression_column].tolist()]
+        return cls(graph_list, targets, transform)
+
 def mol_to_edge_list_graph(mol: Chem.Mol, atm_featurizer: SymbolFeaturizer) -> typing.Tuple[
     np.ndarray, np.ndarray, np.ndarray]:
     """
