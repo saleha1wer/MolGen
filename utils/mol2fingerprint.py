@@ -13,7 +13,7 @@ from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
 
 
-def calc_fp(mols, radius=3, bit_len=2048):
+def calc_fps(mols, radius=3, bit_len=2048):
     ecfp = calc_ecfp(mols, radius=radius, bit_len=bit_len)
     phch = calc_physchem(mols)
     fps = np.concatenate([ecfp, phch], axis=1)

@@ -1,6 +1,10 @@
-# TAKEN FROM JOHN BRADSHAW TUTORIAL - ML FOR MOLECULES --------------------
+# TAKEN FROM JOHN BRADSHAW TUTORIAL - ML FOR MOLECULES ----- https://github.com/john-bradshaw/ml-in-bioinformatics-summer-school-2020
+# TRANSLATES RDKIT.MOL OBJECTS TO GRAPHS
+
 import torch
+
 import numpy as np
+import pandas as pd
 from rdkit import Chem
 import typing
 
@@ -223,6 +227,7 @@ class Graphs:
         return new_concatenated_graph
 
 
+
 class GraphRegressionDataset(torch.utils.data.Dataset):
     """
     Dataset that holds SMILES molecule data along with an associated single
@@ -272,6 +277,7 @@ class GraphRegressionDataset(torch.utils.data.Dataset):
         targets = [float(y) for y in df[regression_column].tolist()]
         return cls(graph_list, targets, transform)
 
+
 def mol_to_edge_list_graph(mol: Chem.Mol, atm_featurizer: SymbolFeaturizer) -> typing.Tuple[
     np.ndarray, np.ndarray, np.ndarray]:
     """
@@ -299,3 +305,5 @@ def mol_to_edge_list_graph(mol: Chem.Mol, atm_featurizer: SymbolFeaturizer) -> t
     edge_feature_list = np.array(edge_feature_list, dtype=np.float32)
 
     return node_features, edge_list, edge_feature_list
+
+
