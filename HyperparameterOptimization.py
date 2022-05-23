@@ -63,26 +63,29 @@ def main():
         print('Finished making graphs')
 
 
-    # MAKING TRAIN AND TEST SET (validation?)
-    y_train, y_test, fps_train, fps_test, graphs_train, graphs_test = train_test_split(target_values, fps, graphs, test_size=0.2)
-    print(y_train.shape, '\n', fps_train.shape, graphs_train.shape)
 
-
-    # GNN METHOD
-    gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
-
-    graphs_train = pd.DataFrame({'x': graphs_train, 'y': y_train})
-    graphs_val = pd.DataFrame({'x': graphs_test, 'y': y_test})
-
-    out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
-
-
-    # plot = plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
-    # save(plot, 'chart_lr=2e-3.png')  # .pdf doesn't work?
-
-    plot_train_and_val_using_mpl(out['train_loss_list'], out['val_lost_list'])
-    plt.savefig('char_lr=2e-3.pdf')
-
+    # NOT USED YET
+    #
+    # # MAKING TRAIN AND TEST SET (validation?)
+    # y_train, y_test, fps_train, fps_test, graphs_train, graphs_test = train_test_split(target_values, fps, graphs, test_size=0.2)
+    # print(y_train.shape, '\n', fps_train.shape, graphs_train.shape)
+    #
+    #
+    # # GNN METHOD
+    # gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
+    #
+    # graphs_train = pd.DataFrame({'x': graphs_train, 'y': y_train})
+    # graphs_val = pd.DataFrame({'x': graphs_test, 'y': y_test})
+    #
+    # out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
+    #
+    #
+    # # plot = plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
+    # # save(plot, 'chart_lr=2e-3.png')  # .pdf doesn't work?
+    #
+    # plot_train_and_val_using_mpl(out['train_loss_list'], out['val_lost_list'])
+    # plt.savefig('char_lr=2e-3.pdf')
+    #
 
 
 if __name__ == '__main__':
