@@ -16,50 +16,42 @@ def canonical_smiles(smi):
 
 def main():
     try:
-        df = pd.read_pickle('data/papyrus_ligand.zip')
-        df = df[['SMILES', 'pchembl_value_Mean']]
-        df = df.dropna(axis=0) 
-        df['SMILES'] = df['SMILES'].map(canonical_smiles)
-        df = df.drop_duplicates(subset=['SMILES'])
-        print('Finished preprocessing Smiles')
-        PandasTools.AddMoleculeColumnToFrame(df,'SMILES','Molecule',includeFingerprints=False)
-        print('Processed Smiles to Mol object')
-        target_values = df['pchembl_value_Mean'].to_numpy()
-        fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEx method)
-        print('Finished calculating fingerprints')
-        graphs = np.array([[]])  # TUTORIAL METHOD (JOHN BRADSHAW)
-        for mol in df['Molecule']:
-            graphs = np.append(graphs, Graphs.from_mol(mol))
-        print('Finished making graphs')
+
+        # df = pd.read_pickle('data/papyrus_ligand.zip')
+        df = pd.read_csv('data/papyrus_ligand')
 
     except Exception as e:
         ## read SMILES
-        print('Could not load data. \nProcessing data.',e)
+        print('Could not load data. \nProcessing data: DrugEx/data/LIGAND_RAW.tsv.',e)
 
         df = pd.read_csv('DrugEx/data/LIGAND_RAW.tsv', sep='\t', header=0)
         df = df[['Smiles', 'pChEMBL_Value']]
-        df = df.dropna(axis=0)  # drop rows with missing values
-        # smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
-        #     .replace('[N]', 'N').replace('[B]', 'B') \
-        #     .replace('[2H]', '[H]').replace('[3H]', '[H]')
-        df['Smiles'] = df['Smiles'].map(canonical_smiles)
-        df = df.drop_duplicates(subset=['Smiles'])
-        print('Finished preprocessing Smiles')
 
-        PandasTools.AddMoleculeColumnToFrame(df,'Smiles','Molecule',includeFingerprints=False)
-        print('Processed Smiles to Mol object')
 
-        # REGRESSION TARGET VALUES
-        target_values = df['pChEMBL_Value'].to_numpy()
+    df = df.dropna(axis=0)  # drop rows with missing values
+    # smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
+    #     .replace('[N]', 'N').replace('[B]', 'B') \
+    #     .replace('[2H]', '[H]').replace('[3H]', '[H]')
+    df['Smiles'] = df['Smiles'].map(canonical_smiles)
+    df = df.drop_duplicates(subset=['Smiles'])
+    print('Finished preprocessing Smiles')
 
-        # FEATURIZATION OF MOLECULES
-        fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEx method)
-        print('Finished calculating fingerprints')
+    PandasTools.AddMoleculeColumnToFrame(df, 'Smiles', 'Molecule', includeFingerprints=False)
+    print('Processed Smiles to Mol object')
 
-        graphs = np.array([[]])  # TUTORIAL METHOD (JOHN BRADSHAW)
-        for mol in df['Molecule']:
-            graphs = np.append(graphs, Graphs.from_mol(mol))
-        print('Finished making graphs')
+    # REGRESSION TARGET VALUES
+    target_values = df['pChEMBL_Value'].to_numpy()
+
+    # FEATURIZATION OF MOLECULES
+    fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEx method)
+    print('Finished calculating fingerprints')
+
+    graphs = np.array([[]])  # TUTORIAL METHOD (JOHN BRADSHAW)
+    for mol in df['Molecule']:
+        graph = Graphs.from_mol(mol)
+        graph_gm_object = Data(x=graph.node_features, edge_index=edge_index, edge_attr=graph_gm_object.edge_features)
+        graphs = np.append(graphs, graph_gm_object)
+    print('Finished making graphs')
 
 
     # MAKING TRAIN AND TEST SET (validation?)
