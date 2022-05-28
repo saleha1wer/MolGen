@@ -120,9 +120,9 @@ class Graphs:
         # ^ nb here we're converting the edge feature list into one-hot form
 
         # Convert to tensors:
-        node_features = torch.tensor(node_features, dtype=torch.float32)
+        node_features = torch.tensor(node_features, dtype=torch.float64)
         edge_list = torch.tensor(edge_list, dtype=torch.int64)
-        edge_features = torch.tensor(edge_features, dtype=torch.float32)
+        edge_features = torch.tensor(edge_features, dtype=torch.float64)
         node_to_graph_id = torch.zeros(node_features.shape[0], dtype=torch.int64)
         # ^we only (currently) have one molecule per SMILES so all the nodes can be assigned
         # the same id

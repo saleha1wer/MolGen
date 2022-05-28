@@ -17,6 +17,8 @@ import getopt, sys
 rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
 
+def canonical_smiles(smi):
+    return Chem.MolToSmiles(Chem.MolFromSmiles(smi), canonical=True)
 
 
 
