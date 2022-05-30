@@ -1,13 +1,24 @@
 import torch
+import os
+import typing
+import numpy as np
+import time
+import pandas as pd
+from dataclasses import dataclass
+
+from matplotlib import pyplot as plt
 from torch import nn
-from mol2graph import Graphs
 from torch import optim
 from torch.nn import functional as F
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
 from ignite.metrics import Accuracy, Loss, RunningAverage
 
 from ignite.contrib.handlers import ProgressBar
+from torch.utils import data
 from torch_geometric.nn import GATConv
+from torch_geometric.data import Data
+
+from utils.from_smiles import GraphRegressionDataset, Graphs
 
 
 @dataclass
@@ -18,15 +29,26 @@ class TrainParams:
     num_epochs: int = 100
     device: typing.Optional[str] = 'cpu'
 
-class GNN(nn.Module):
-    def __init__(self, node_feature_dimension, num_propagation_steps: int = 4):
-        super().__init__()
+
+class DebuggingParams:
+    batch_size: int = 64
+    val_batch_size: int = 64
+    learning_rate: float = 2e-3
+    num_epochs: int = 3
+    device: typing.Optional[str] = 'cpu'
+
+
+class GNN(pl.LightningModule):
+    def __init__(self, config, data_dir = None):
+        super(GNN, self).__init__()
+
+        self.data_dir = data_dir or os.getcwd() # pass this from now on
 
         self.gat = GATConv(in_channels=-1, out_channels=node_feature_dimension, edge_dim=1)
 
         self.final_lin = nn.Linear(node_feature_dimension, 1)
 
-    def forward(self, graphs_in: Graphs):
+    def forward(self, graphs_in: Data):
         """
         Produces a column vector of predictions, with each element in this vector a prediction
         for each marked graph in `graphs_in`.
@@ -63,14 +85,87 @@ class GNN(nn.Module):
         final_prediction = self.final_lin(graph_embedding)  # [G, 1]
         return final_prediction
 
+    def mse_loss(self, prediction, target):
+        result = F.mse_loss(prediction, target)
+        print(f'result shape:{result.shape}')
+        return result
 
-@dataclass
-class TrainParams:
-    batch_size: int = 64
-    val_batch_size: int = 64
-    learning_rate: float = 1e-3
-    num_epochs: int = 100
-    device: typing.Optional[str] = 'cpu'
+    def training_step(self,train_batch, batch_idx):
+        x, y = train_batch
+        print(f'printing x:{x}')
+        print(f'shape of y:{y.shape}') # TODO continue here, for some reason only 1 graph gets passed in but a vector of multiple y (target) values, is this correct???
+        prediction = self.forward(x)
+        print(f'printing prediction:{prediction}')
+        loss = self.mse_loss(prediction, y)
+        self.log('train_loss', loss)
+        return loss
+
+    def validation_step(self, val_batch, batch_idx):
+        x, y = val_batch
+        prediction = self.forward(x)
+        loss = self.mse_loss(prediction, y)
+        self.log('val_loss', loss)
+        return {'val_loss' : loss}
+
+    def validation_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
+        self.log('val_loss', avg_loss)
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        return optimizer
+
+
+# Here's the dataloader class (as in https://towardsdatascience.com/from-pytorch-to-pytorch-lightning-a-gentle-introduction-b371b7caaf09)
+class GNNDataModule(pl.LightningDataModule):
+    def __init__(self, config):
+        super().__init__()
+        self.prepare_data_per_node = True
+        self.val_batch_size = config['val_batch_size']
+        self.train_batch_size = config['train_batch_size']
+        self.collate_func = config['collate_func']
+        self.num_workers = config['num_workers']
+
+    def setup(self, stage): # don't know what the stage param is used for
+        graphs_train = graphs_train.reshape(graphs_train.shape[0],1)
+        y_train = y_train.reshape(y_train.shape[0],1)
+        graphs_test = graphs_test.reshape(graphs_test.shape[0],1)
+        y_test = y_test.reshape(y_test.shape[0],1)
+        self.train_data = GraphDataSet(data=graphs_train, targets=y_train)
+        self.test_data = GraphDataSet(data=graphs_test, targets=y_test)
+        print(f'loaded train_data of len:{len(self.train_data)}')
+        print(f'loaded test_data of len:{len(self.test_data)}')
+
+    def train_dataloader(self):
+        train_dataloader = data.DataLoader(self.train_data,
+                                           self.train_batch_size,
+                                           shuffle=True,
+                                           collate_fn=self.collate_func,
+                                           num_workers=self.num_workers)
+        return train_dataloader
+
+    def val_dataloader(self):
+        val_dataloader = data.DataLoader(self.test_data,
+                                         self.val_batch_size,
+                                         shuffle=False,
+                                         collate_fn=self.collate_func,
+                                         num_workers=self.num_workers)
+        return val_dataloader
+
+
+class GraphDataSet(Dataset):
+    def __init__(self, data, targets):
+        self.data = data
+        self.targets = targets
+        self.transform = None # can maybe be removed for us
+
+    def __getitem__(self, index):
+        x = self.data[index]
+        y = self.targets[index]
+        return x, y
+
+    def __len__(self):
+        return len(self.data)
 
 
 def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
@@ -109,6 +204,7 @@ def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
     optimizer = optim.Adam(neural_network.parameters(), lr=params.learning_rate)
 
     # Work out what device we're going to run on (ie CPU or GPU)
+    print('Starting training of NN on device: {}'.format(params.device))
     device = params.device
 
     # We're going to use PyTorch Ignite to take care of the majority of the training boilerplate for us
@@ -214,7 +310,8 @@ def collate_for_graphs(batch):
     # The y values can use the default collate function as before.
     targets = torch.utils.data.dataloader.default_collate(list_of_targets)
 
-    return graphs, targets
+    return list_of_graphs, targets
+
 
 
 def plot_train_and_val_using_altair(train_loss, val_loss):
@@ -271,7 +368,7 @@ def plot_train_and_val_using_altair(train_loss, val_loss):
     )
 
 
-def plot_train_and_val_using_mpl(train_loss, val_loss):
+def plot_train_and_val_using_mpl(train_loss, val_loss, name=None, save=False):
     """
     Plots the train and validation loss using Matplotlib
     """
@@ -284,4 +381,10 @@ def plot_train_and_val_using_mpl(train_loss, val_loss):
     ax.legend()
     ax.set_ylabel('loss')
     ax.set_xlabel('epoch')
+    if save:
+        if name != None:
+            ax.set_title(name)
+        else:
+            ax.set_title('Anonymous plot')
+        plt.savefig(name + '.png')
     return f, ax
