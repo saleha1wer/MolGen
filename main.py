@@ -43,6 +43,7 @@ def main():
 
     # Here we put the testing code
 
+    trainer.test(model, data_module) #loads the best checkpoint automatically
 
 
 

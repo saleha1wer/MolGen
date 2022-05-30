@@ -117,7 +117,7 @@ class GNN(pl.LightningModule):
         result = F.mse_loss(prediction, target)
         return result
 
-    def training_step(self,train_batch, batch_idx):
+    def training_step(self, train_batch, batch_idx):
         x, y = train_batch
         prediction = self.forward(x)
         loss = self.mse_loss(prediction, y)
@@ -130,6 +130,13 @@ class GNN(pl.LightningModule):
         loss = self.mse_loss(prediction, y)
         self.log('val_loss', loss)
         return {'val_loss' : loss}
+
+    def test_step(self, test_batch, batch_idx):
+        x, y = test_batch
+        prediction = self.forward(x)
+        loss = self.mse_loss(prediction, y)
+        self.log('test_loss', loss)
+        return loss
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
@@ -228,6 +235,8 @@ class GNNDataModule(pl.LightningDataModule):
                                          num_workers=self.num_workers)
         return val_dataloader
 
+    def test_dataloader(self):
+        return self.val_dataloader()
 
 class GraphDataSet(Dataset):
     def __init__(self, data, targets):
