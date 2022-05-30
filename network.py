@@ -115,15 +115,11 @@ class GNN(pl.LightningModule):
 
     def mse_loss(self, prediction, target):
         result = F.mse_loss(prediction, target)
-        print(f'result shape:{result.shape}')
         return result
 
     def training_step(self,train_batch, batch_idx):
         x, y = train_batch
-        print(f'printing x:{x}')
-        print(f'shape of y:{y.shape}') # TODO continue here, for some reason only 1 graph gets passed in but a vector of multiple y (target) values, is this correct???
         prediction = self.forward(x)
-        print(f'printing prediction:{prediction}')
         loss = self.mse_loss(prediction, y)
         self.log('train_loss', loss)
         return loss
@@ -247,7 +243,7 @@ class GraphDataSet(Dataset):
     def __len__(self):
         return len(self.data)
 
-
+# after we incorporate this into the pytorch lightning framework we can delete this function
 def train_neural_network(train_dataset: np.ndarray, val_dataset: np.ndarray,
                          neural_network: nn.Module,
                          params: typing.Optional[TrainParams]=None,
@@ -380,24 +376,22 @@ def collate_for_graphs(batch):
     Look at ss_utils to see how this gets used.
     """
     # Split up the graphs and the y values
-    print(f'batch:{batch}')
 
     zipped = zip(*batch)
     list_of_graphs, list_of_targets = zipped
-    #print(f'list_of_graphs:{list_of_graphs}')
-    #print(f'list_of_targets:{list_of_targets}')
 
+    graphs = []
 
-    list_of_graphs = list(list_of_graphs)
-    list_of_targets = list(list_of_targets)
+    for idx, item in enumerate(list_of_graphs):
+        graphs.append(item[0])
 
     # The graphs need to be concatenated (i.e. collated) using the function you wrote
-    #graphs = Graphs.concatenate(list_of_graphs)
+    graphs = Graphs.concatenate(graphs)
 
     # The y values can use the default collate function as before.
     targets = torch.utils.data.dataloader.default_collate(list_of_targets)
 
-    return list_of_graphs, targets
+    return graphs, targets
 
 
 
