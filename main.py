@@ -1,41 +1,37 @@
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
+import pytorch_lightning as pl
 from rdkit import Chem
-from rdkit.Chem import PandasTools
-from utils.mol2fingerprint import calc_fps
 from sklearn.model_selection import train_test_split
 # from xgboost import XGBRegressor
 
 from sklearn.metrics import mean_squared_error
-from network import GNN, train_neural_network, plot_train_and_val_using_altair, collate_for_graphs, plot_train_and_val_using_mpl
+from network import GNN
+from data_module import GNNDataModule
 from utils.from_smiles import from_smiles
 
 
 def canonical_smiles(smi):
     return Chem.MolToSmiles(Chem.MolFromSmiles(smi), canonical=True)
 
-
-def processing(df):
+def processing(df : pd.DataFrame):
     df = df.dropna(axis=0)  # drop rows with missing values
     # smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
     #     .replace('[N]', 'N').replace('[B]', 'B') \
     #     .replace('[2H]', '[H]').replace('[3H]', '[H]')
-    df['Smiles'] = df['Smiles'].map(canonical_smiles)
-    df = df.drop_duplicates(subset=['Smiles'])
+
+    # doesn't assuming that all dupicates are removed already - Papyrus
+    # df['Smiles'] = df['Smiles'].apply(canonical_smiles)
+    # df = df.drop_duplicates(subset=['Smiles'])
     print('Finished preprocessing Smiles')
 
-    graphs = df['Smiles'].apply(from_smiles)
-    graphs = graphs.to_numpy()
+    print(df.shape)
+    df['graphs'] = df['SMILES'].apply(from_smiles)
 
+    # data selection and split
+    df_train, df_test = train_test_split(df, test_size=0.2)
+    print(df_train.shape)
 
-    # REGRESSION TARGET VALUES
-    target_values = df['pChEMBL_Value'].to_numpy()
-
-
-    y_train, y_test, graphs_train, graphs_test = train_test_split(target_values, graphs, test_size=0.2)
-    print(y_train.shape, '\n', graphs_train.shape)
-    return y_train, y_test, graphs_train, graphs_test
+    return df_train, df_test
 
     # PandasTools.AddMoleculeColumnToFrame(df, 'Smiles', 'Molecule', includeFingerprints=False)
     # print('Processed Smiles to Mol object')
@@ -49,42 +45,38 @@ def processing(df):
     #                                                                                    test_size=0.2)
 
 
-
 def main():
-    try:
 
-        df = pd.read_pickle('data/papyrus_ligand.zip')
-        # df = pd.read_csv('data/papyrus_ligand')
+    # for the moment, loading the zip file does not
+    df = pd.read_csv('data/papyrus_ligand')
 
-    except Exception as e:
-        ## read SMILES
-        print('Could not load data. \nProcessing data: DrugEx/data/LIGAND_RAW.tsv.',e)
+    # df = df.head(80)
 
-        df = pd.read_csv('DrugEx/data/LIGAND_RAW.tsv', sep='\t', header=0)
+    print(df.shape)
+    print(df.columns)
 
-    print(df.head())
+    df = df[['SMILES', 'pchembl_value_Mean']]
+    df_train, df_test = processing(df)
 
-    df = df[['Smiles', 'pChEMBL_Value']]
+    batch_size = 64
+    datamodule_config = {
+        'train_batch_size': batch_size,
+        'val_batch_size': batch_size,
+        'num_workers': 1
+    }
 
+    data_module = GNNDataModule(datamodule_config, df_train, df_test)
 
-    y_train, y_test, graphs_train, graphs_test = processing(df)
+    gnn_config = {
+        'node_feature_dim': 9,
+        'edge_dim' : 3,
+        'embedding_dim': [64, 128]
+    }
 
+    model = GNN(gnn_config)
+    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=10)
 
-    # GNN METHOD
-    gnn = GNN(119)
-
-    graphs_train = pd.DataFrame({'x': graphs_train, 'y': y_train})
-    graphs_val = pd.DataFrame({'x': graphs_test, 'y': y_test})
-
-
-    out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
-
-
-
-    # plot = plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
-    # save(plot, 'chart_lr=2e-3.png')  # .pdf doesn't work?
-
-    plot_train_and_val_using_mpl(out['train_loss_list'], out['val_lost_list'], name='arbitrary plotname', save=True)
+    trainer.fit(model, data_module)
 
 
 if __name__ == '__main__':
