@@ -62,19 +62,18 @@ class GNN(pl.LightningModule):
     def __init__(self, config, data_dir = None):
         super(GNN, self).__init__()
 
-        self.data_dir = data_dir or os.getcwd() # pass this from now on
-
         self.node_feature_dimension = config['node_feature_dimension']
+        self.embeddings_dimension = config['embeddings_dimension'] # used to be node_feature_dimension, vary this for hyperparam. opt.
         self.num_propagation_steps = config['num_propagation_steps']
         # called T above.
 
         # Our sub modules:
         self.message_projection = nn.Linear(self.node_feature_dimension, self.node_feature_dimension, bias=False)
         self.update_gru = nn.GRUCell(input_size=self.node_feature_dimension,
-                                     hidden_size=self.node_feature_dimension, bias=True)
-        self.attn_net = nn.Linear(self.node_feature_dimension, 1)
-        self.proj_net = nn.Linear(self.node_feature_dimension, self.node_feature_dimension)
-        self.final_lin = nn.Linear(self.node_feature_dimension, 1)
+                                     hidden_size=self.embeddings_dimension, bias=True)
+        self.attn_net = nn.Linear(self.embeddings_dimension, 1)
+        self.proj_net = nn.Linear(self.embeddings_dimension, self.embeddings_dimension)
+        self.final_lin = nn.Linear(self.embeddings_dimension, 1)
         self.double()
 
     def forward(self, graphs_in: Graphs):
@@ -151,6 +150,11 @@ class GNN(pl.LightningModule):
 class GNNDataModule(pl.LightningDataModule):
     def __init__(self, config):
         super().__init__()
+        if 'data_dir' in config:
+            self.data_dir = config['data_dir']
+        else:
+            # DOESN'T WORK WITH RAYTUNE, raytune executes in a different folder than where the python files are so explicitly pass the file location every time
+            self.data_dir = os.getcwd()
         self.prepare_data_per_node = True
         self.val_batch_size = config['val_batch_size']
         self.train_batch_size = config['train_batch_size']
@@ -160,7 +164,8 @@ class GNNDataModule(pl.LightningDataModule):
         try:
             print('Starting to read papyrus_ligand.zip')
             # for now the data paths are hardcoded
-            df = pd.read_pickle('data/papyrus_ligand.zip')
+            print('Attempting to read directory:\n'+self.data_dir+'papyrus_ligand.zip')
+            df = pd.read_pickle(self.data_dir+'papyrus_ligand.zip')
             df = df[['SMILES', 'pchembl_value_Mean']]
             df = df.dropna(axis=0)
 
@@ -184,8 +189,8 @@ class GNNDataModule(pl.LightningDataModule):
             ## read SMILES
             print('Exception {} occurred'.format(e))
             print('Could not read data from papyrus_ligand.zip. \nProcessing data from LIGAND_RAW.tsv file...', e)
-
-            df = pd.read_csv('DrugEx/data/LIGAND_RAW.tsv', sep='\t', header=0)
+            print('Attempting to read directory:\n'+self.data_dir+'LIGAND_RAW.tsv')
+            df = pd.read_csv(self.data_dir+'LIGAND_RAW.tsv', sep='\t', header=0)
             df = df[['Smiles', 'pChEMBL_Value']]
             df = df.dropna(axis=0)  # drop rows with missing values
             # smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
