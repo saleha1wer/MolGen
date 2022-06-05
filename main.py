@@ -47,16 +47,16 @@ def main():
     node_feature_dimension = len(Graphs.ATOM_FEATURIZER.indx2atm)
 
     config = dict(node_feature_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
-        num_propagation_steps=tune.randint(1, 10),
+        num_propagation_steps=tune.randint(1, 15),
         embeddings_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
         train_batch_size=64,
         val_batch_size=64,
         num_workers=0,
 #        data_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\data\\', removed since it broke the automatic naming function for the logs
-        learning_rate=tune.choice([0.0001, 0.001, 0.01, 0.1, 0.2, 0.3, 0.4, 0.5]),
-        momentum=tune.uniform(0.001, 1.0),
+        learning_rate=tune.loguniform(0.0001, 0.7),
+        momentum=tune.loguniform(0.001, 1.0),
         weight_decay=tune.loguniform(0.00001, 1.0),
-        max_epochs=10)
+        max_epochs=5)
 
 #    scheduler = ASHAScheduler(
 #       max_t=50,
@@ -76,7 +76,7 @@ def main():
 
     analysis = tune.run(partial(train_tune),
             config=config,
-            num_samples=10,
+            num_samples=2, # number of samples taken in the entire sample space
             search_alg=search_alg,
 #            progress_reporter=reporter,
 #            scheduler=scheduler,
@@ -88,8 +88,11 @@ def main():
 
 
     print('Done with hyperparameter optimization.')
-#    results_df = analysis.results_df
-#    logdir = analysis.get_best_logdir('mean_accuracy')
+
+    print(f"Best configuration:{analysis.get_best_config(metric='loss', mode='min')}")
+    results_df = analysis.results_df
+    print("Showing best results obtained:")
+    print(analysis.dataframe(metric="loss", mode="min").iloc[0])
 
 
 if __name__ == '__main__':
