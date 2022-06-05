@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Finished large parts of the implementation of pytorch lightning, the training of the model now works (presumably) for gpu and cpu.">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrugEx/data/LIGAND_RAW.tsv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrugEx/data/voc_graph.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/DrugEx/data/voc_smiles.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
@@ -328,7 +325,14 @@
       <option name="project" value="LOCAL" />
       <updated>1653902396542</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors">
+      <created>1653998326875</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1653998326875</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -375,6 +379,7 @@
     <MESSAGE value="Small changes, not very significant" />
     <MESSAGE value="Started with the implementation of pytorch lightning, seems to work apart from the fact that the graphs objects are formatted in a very different way from how pyt.light. expects them. any help would be appreciated." />
     <MESSAGE value="Finished large parts of the implementation of pytorch lightning, the training of the model now works (presumably) for gpu and cpu." />
-    <option name="LAST_COMMIT_MESSAGE" value="Finished large parts of the implementation of pytorch lightning, the training of the model now works (presumably) for gpu and cpu." />
+    <MESSAGE value="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors" />
+    <option name="LAST_COMMIT_MESSAGE" value="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors" />
   </component>
 </project>
