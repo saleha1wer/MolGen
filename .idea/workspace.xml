@@ -4,9 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Prints the best results and loss at the end now.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -338,7 +339,14 @@
       <option name="project" value="LOCAL" />
       <updated>1654429701001</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="Prints the best results and loss at the end now.">
+      <created>1654436520977</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1654436520977</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -362,7 +370,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="recent update" />
     <MESSAGE value="renaming transform function" />
     <MESSAGE value="adding collate function" />
     <MESSAGE value="pasting TrainParams class, train_neural_network function, and plot_train_and_val_using_altair" />
@@ -387,6 +394,7 @@
     <MESSAGE value="Finished large parts of the implementation of pytorch lightning, the training of the model now works (presumably) for gpu and cpu." />
     <MESSAGE value="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors" />
     <MESSAGE value="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property" />
-    <option name="LAST_COMMIT_MESSAGE" value="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property" />
+    <MESSAGE value="Prints the best results and loss at the end now." />
+    <option name="LAST_COMMIT_MESSAGE" value="Prints the best results and loss at the end now." />
   </component>
 </project>

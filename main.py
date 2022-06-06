@@ -1,5 +1,6 @@
 #import pandas as pd
 #import numpy as np
+import os
 #import matplotlib.pyplot as plt
 from functools import partial
 # from rdkit import Chem
@@ -8,6 +9,7 @@ from functools import partial
 # from sklearn.model_selection import train_test_split
 # from sklearn.metrics import mean_squared_error
 # from xgboost import XGBRegressor
+from pandas import DataFrame
 from utils.mol2graph import Graphs
 import torch
 from network import GNN, GNNDataModule, collate_for_graphs
@@ -46,17 +48,18 @@ def main():
     torch.set_default_dtype(torch.float64)
     node_feature_dimension = len(Graphs.ATOM_FEATURIZER.indx2atm)
 
-    config = dict(node_feature_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
-        num_propagation_steps=tune.randint(1, 15),
-        embeddings_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
+    GNN_config = dict(
         train_batch_size=64,
         val_batch_size=64,
-        num_workers=0,
-#        data_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\data\\', removed since it broke the automatic naming function for the logs
+        num_workers=0)
+
+    DataModule_config = dict(node_feature_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
+        num_propagation_steps=tune.randint(1, 15),
+        embeddings_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
         learning_rate=tune.loguniform(0.0001, 0.7),
         momentum=tune.loguniform(0.001, 1.0),
         weight_decay=tune.loguniform(0.00001, 1.0),
-        max_epochs=5)
+        max_epochs=1)
 
 #    scheduler = ASHAScheduler(
 #       max_t=50,
@@ -74,9 +77,13 @@ def main():
         mode='min'
     )
 
+    def join_dicts(a, b):
+        return dict(list(a.items()) + list(b.items()))
+
+    joined_config = join_dicts(GNN_config, DataModule_config)
     analysis = tune.run(partial(train_tune),
-            config=config,
-            num_samples=2, # number of samples taken in the entire sample space
+            config=joined_config,
+            num_samples=1, # number of samples taken in the entire sample space
             search_alg=search_alg,
 #            progress_reporter=reporter,
 #            scheduler=scheduler,
@@ -87,13 +94,38 @@ def main():
                         })
 
 
-    print('Done with hyperparameter optimization.')
+    print('Finished with hyperparameter optimization.')
+    best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
+    best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')
 
-    print(f"Best configuration:{analysis.get_best_config(metric='loss', mode='min')}")
-    results_df = analysis.results_df
-    print("Showing best results obtained:")
-    print(analysis.dataframe(metric="loss", mode="min").iloc[0])
+    print(f"Best trial configuration:{best_trial.config}")
+    print(f"Best trial final validation loss:{best_trial.last_result['loss']}")
 
+#    print(f"attempting to load from dir: {best_trial.checkpoint.value}")
+#    print(f"attempting to load file: {best_trial.checkpoint.value + 'checkpoint'}")
+
+    test_config = join_dicts(best_configuration, DataModule_config)
+    full_path = "C:\\Users\\bwvan\\PycharmProjects\\GenMol\\test"
+#    checkpoint_model = GNN(test_config)
+    print(f"best_trial.checkpoint.value: {best_trial.checkpoint.value}")
+    print(f"best_trial.checkpoint: {best_trial.checkpoint}")
+    print(f"manual:{full_path}")
+
+    checkpoint_model = GNN.load_from_checkpoint(full_path)
+
+    test_datamodule = GNNDataModule(test_config)
+
+
+
+    trainer = pl.Trainer(max_epochs=test_config['max_epochs'],
+                         accelerator='gpu',
+                         devices=1,
+                         enable_progress_bar=True,
+                         enable_checkpointing=True,
+                         callbacks=[raytune_callback])
+    test_results = trainer.test(checkpoint_model, test_datamodule)
+    print(test_results)
+    print(checkpoint_model.test_results)
 
 if __name__ == '__main__':
     main()

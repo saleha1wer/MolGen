@@ -36,8 +36,8 @@ import pytorch_lightning as pl
 
 
 class GNN(pl.LightningModule):
-    def __init__(self, config, data_dir = None):
-        super(GNN, self).__init__()
+    def __init__(self, config, *args, **kwargs):
+        super(GNN, self).__init__(*args, **kwargs)
 
         self.node_feature_dimension = config['node_feature_dimension']
         self.embeddings_dimension = config['embeddings_dimension'] # used to be node_feature_dimension, vary this for hyperparam. opt.
@@ -55,6 +55,7 @@ class GNN(pl.LightningModule):
         self.momentum = config['momentum']
 #        self.betas = config['betas']
         self.weight_decay = config['weight_decay']
+        self.save_hyperparameters()
         self.double()
 
     def forward(self, graphs_in: Graphs):
@@ -117,6 +118,11 @@ class GNN(pl.LightningModule):
         loss = self.mse_loss(prediction, y)
         self.log('test_loss', loss)
         return loss
+
+    def test_epoch_end(self, outputs):
+        avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
+        self.test_results = {'test_loss' : avg_loss}
+        return self.test_results
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
