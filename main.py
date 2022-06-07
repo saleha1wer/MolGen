@@ -22,6 +22,7 @@ from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneRepor
 from ray.tune.suggest.optuna import OptunaSearch
 from ray.tune.utils import wait_for_gpu
 import optuna
+import timeit
 
 raytune_callback = TuneReportCheckpointCallback(
     metrics={
@@ -59,7 +60,7 @@ def main():
         learning_rate=tune.loguniform(0.0001, 0.7),
         momentum=tune.loguniform(0.001, 1.0),
         weight_decay=tune.loguniform(0.00001, 1.0),
-        max_epochs=1)
+        max_epochs=30)
 
 #    scheduler = ASHAScheduler(
 #       max_t=50,
@@ -81,9 +82,12 @@ def main():
         return dict(list(a.items()) + list(b.items()))
 
     joined_config = join_dicts(GNN_config, DataModule_config)
+
+    start = timeit.timeit()
+    print(f"Starttime:{start}")
     analysis = tune.run(partial(train_tune),
             config=joined_config,
-            num_samples=1, # number of samples taken in the entire sample space
+            num_samples=50, # number of samples taken in the entire sample space
             search_alg=search_alg,
 #            progress_reporter=reporter,
 #            scheduler=scheduler,
@@ -111,11 +115,9 @@ def main():
     print(f"best_trial.checkpoint: {best_trial.checkpoint}")
     print(f"manual:{full_path}")
 
-    checkpoint_model = GNN.load_from_checkpoint(full_path)
+    best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value+'/checkpoint')
 
     test_datamodule = GNNDataModule(test_config)
-
-
 
     trainer = pl.Trainer(max_epochs=test_config['max_epochs'],
                          accelerator='gpu',
@@ -123,9 +125,9 @@ def main():
                          enable_progress_bar=True,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
-    test_results = trainer.test(checkpoint_model, test_datamodule)
-    print(test_results)
-    print(checkpoint_model.test_results)
+    test_results = trainer.test(best_checkpoint_model, test_datamodule)
 
+    end = timeit.timeit()
+    print(f"Elapsed time:{end-start}")
 if __name__ == '__main__':
     main()

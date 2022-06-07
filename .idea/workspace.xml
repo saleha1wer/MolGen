@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Prints the best results and loss at the end now.">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Doesnt work because of a permission denied error for bob">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
@@ -346,7 +346,14 @@
       <option name="project" value="LOCAL" />
       <updated>1654436520977</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="Doesnt work because of a permission denied error for bob">
+      <created>1654523283952</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1654523283952</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -370,7 +377,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="renaming transform function" />
     <MESSAGE value="adding collate function" />
     <MESSAGE value="pasting TrainParams class, train_neural_network function, and plot_train_and_val_using_altair" />
     <MESSAGE value="file for storing processed ligand data" />
@@ -395,6 +401,7 @@
     <MESSAGE value="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors" />
     <MESSAGE value="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property" />
     <MESSAGE value="Prints the best results and loss at the end now." />
-    <option name="LAST_COMMIT_MESSAGE" value="Prints the best results and loss at the end now." />
+    <MESSAGE value="Doesnt work because of a permission denied error for bob" />
+    <option name="LAST_COMMIT_MESSAGE" value="Doesnt work because of a permission denied error for bob" />
   </component>
 </project>
