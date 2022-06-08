@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Doesnt work because of a permission denied error for bob">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="hyperparameter optimization works. use this for finding optimal values">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -353,7 +352,14 @@
       <option name="project" value="LOCAL" />
       <updated>1654523283952</updated>
     </task>
-    <option name="localTasksCounter" value="31" />
+    <task id="LOCAL-00031" summary="hyperparameter optimization works. use this for finding optimal values">
+      <created>1654632991514</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1654632991514</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -377,7 +383,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="adding collate function" />
     <MESSAGE value="pasting TrainParams class, train_neural_network function, and plot_train_and_val_using_altair" />
     <MESSAGE value="file for storing processed ligand data" />
     <MESSAGE value="file for storing processed ligand data, formatting may be still be changed in main.py" />
@@ -402,6 +407,7 @@
     <MESSAGE value="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property" />
     <MESSAGE value="Prints the best results and loss at the end now." />
     <MESSAGE value="Doesnt work because of a permission denied error for bob" />
-    <option name="LAST_COMMIT_MESSAGE" value="Doesnt work because of a permission denied error for bob" />
+    <MESSAGE value="hyperparameter optimization works. use this for finding optimal values" />
+    <option name="LAST_COMMIT_MESSAGE" value="hyperparameter optimization works. use this for finding optimal values" />
   </component>
 </project>

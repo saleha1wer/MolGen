@@ -22,7 +22,7 @@ from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneRepor
 from ray.tune.suggest.optuna import OptunaSearch
 from ray.tune.utils import wait_for_gpu
 import optuna
-import timeit
+import time
 
 raytune_callback = TuneReportCheckpointCallback(
     metrics={
@@ -83,15 +83,15 @@ def main():
 
     joined_config = join_dicts(GNN_config, DataModule_config)
 
-    start = timeit.timeit()
+    start = time.time()
     print(f"Starttime:{start}")
     analysis = tune.run(partial(train_tune),
             config=joined_config,
-            num_samples=50, # number of samples taken in the entire sample space
+            num_samples=10, # number of samples taken in the entire sample space
             search_alg=search_alg,
 #            progress_reporter=reporter,
 #            scheduler=scheduler,
-            local_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\data\\',
+            local_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\tensorboardlogs\\',
                         resources_per_trial={
                             'gpu'   :   1
                             #'memory'    :   10 * 1024 * 1024 * 1024
@@ -109,11 +109,6 @@ def main():
 #    print(f"attempting to load file: {best_trial.checkpoint.value + 'checkpoint'}")
 
     test_config = join_dicts(best_configuration, DataModule_config)
-    full_path = "C:\\Users\\bwvan\\PycharmProjects\\GenMol\\test"
-#    checkpoint_model = GNN(test_config)
-    print(f"best_trial.checkpoint.value: {best_trial.checkpoint.value}")
-    print(f"best_trial.checkpoint: {best_trial.checkpoint}")
-    print(f"manual:{full_path}")
 
     best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value+'/checkpoint')
 
@@ -127,7 +122,7 @@ def main():
                          callbacks=[raytune_callback])
     test_results = trainer.test(best_checkpoint_model, test_datamodule)
 
-    end = timeit.timeit()
+    end = time.time()
     print(f"Elapsed time:{end-start}")
 if __name__ == '__main__':
     main()
