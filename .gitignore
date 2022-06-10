@@ -1,8 +1,7 @@
 
-main.py
-mol2graph.py
-network.py
 utils/__pycache__/mol2graph.cpython-37.pyc
 utils/papyrus-to-smiles.py
 .idea/workspace.xml
 __pycache__/network.cpython-37.pyc
+/data/a2aar/processed/
+/data/adenosine/raw/

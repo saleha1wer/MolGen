@@ -15,14 +15,12 @@ from torch.utils import data
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 
-from utils.from_smiles import GraphRegressionDataset, Graphs
-
 
 @dataclass
 class TrainParams:
     batch_size: int = 64
     val_batch_size: int = 64
-    learning_rate: float = 2e-3
+    learning_rate: float = 3e-3
     num_epochs: int = 100
     device: typing.Optional[str] = 'cpu'
 
@@ -41,11 +39,13 @@ class GNN(pl.LightningModule):
 
         self.data_dir = data_dir or os.getcwd()  # pass this from now on
 
+        self.learning_rate = config['learning_rate']
         self.node_feature_dim = config['node_feature_dim']
         self.edge_dim = config['edge_dim']
         self.hidden_size = config['embedding_dim']
 
-        self.gat = GATConv(in_channels=(self.node_feature_dim, self.edge_dim), out_channels=self.hidden_size, edge_dim=3)
+        self.gat = GATConv(in_channels=(self.node_feature_dim, self.edge_dim, ), out_channels=self.hidden_size,
+                           edge_dim=3)
 
         self.final_lin = nn.Linear(self.hidden_size, 1)
 
@@ -58,13 +58,9 @@ class GNN(pl.LightningModule):
         d the feature dimension, and G is the number of individual molecular graphs.
         """
 
-        # 1. Message passing and updating
-        x, edge_attr, edge_index = graphs.x, graphs.edge_attr, graphs.edge_index
-        x = x.float()
-        edge_attr = edge_attr.float()
-        graph_embedding = self.gat(x, edge_index=edge_index, edge_attr=edge_attr)
+        # x, edge_attr = graphs.x.float(), graphs.edge_attr.float()
+        graph_embedding = self.gat(x=graphs.x, edge_index=graphs.edge_index, edge_attr=graphs.edge_attr)
         graph_embedding = F.relu(graph_embedding)
-
 
         # 3. Final linear projection.
         final_prediction = self.final_lin(graph_embedding)  # [G, 1]
@@ -96,7 +92,7 @@ class GNN(pl.LightningModule):
         self.log('val_loss', avg_loss)
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
 
 
