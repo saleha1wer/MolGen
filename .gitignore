@@ -1,7 +1,8 @@
 
-utils/__pycache__/mol2graph.cpython-37.pyc
-utils/papyrus-to-smiles.py
-.idea/workspace.xml
-__pycache__/network.cpython-37.pyc
+__pycache__
+.idea
+/DrugEx
+__pycache__
+lightning_logs
 /data/a2aar/processed/
-/data/adenosine/raw/
+/data/adenosine/processed/
