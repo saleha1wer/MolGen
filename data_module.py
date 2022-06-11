@@ -51,10 +51,11 @@ class MoleculeDataset(Dataset):
 
     def process(self):
         self.data = pd.read_csv(self.raw_paths[0]).reset_index()
+        # self.data = self.data.head(500)
         for index, mol in tqdm(self.data.iterrows(), total=self.data.shape[0]):
             # Featurize molecule into PyG graph object Data
             data = from_smiles(mol['SMILES'])
-            data.y = self._get_label(mol['pchembl_value_Mean'])
+            data.y = mol['pchembl_value_Mean']
             if self.test:
                 torch.save(data,
                            os.path.join(self.processed_dir,

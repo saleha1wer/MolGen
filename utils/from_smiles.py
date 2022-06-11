@@ -86,18 +86,18 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
     for atom in mol.GetAtoms():
         x = []
         x.append(x_map['atomic_num'].index(atom.GetAtomicNum()))
-        x.append(x_map['chirality'].index(str(atom.GetChiralTag())))
-        x.append(x_map['degree'].index(atom.GetTotalDegree()))
+        # x.append(x_map['chirality'].index(str(atom.GetChiralTag())))
+        # x.append(x_map['degree'].index(atom.GetTotalDegree()))
         # x.append(x_map['formal_charge'].index(atom.GetFormalCharge()))
         # x.append(x_map['num_hs'].index(atom.GetTotalNumHs()))
-        x.append(x_map['num_radical_electrons'].index(
-            atom.GetNumRadicalElectrons()))
+        # x.append(x_map['num_radical_electrons'].index(
+        #     atom.GetNumRadicalElectrons()))
         # x.append(x_map['hybridization'].index(str(atom.GetHybridization())))
         # x.append(x_map['is_aromatic'].index(atom.GetIsAromatic()))
         # x.append(x_map['is_in_ring'].index(atom.IsInRing()))
         xs.append(x)
 
-    x = torch.tensor(xs, dtype=torch.float).view(-1, len(xs))
+    x = torch.tensor(xs, dtype=torch.float).view(len(xs), -1)  # for some reason, this works with the dataloader? [len(xs), -1]
 
     edge_indices, edge_attrs = [], []
     for bond in mol.GetBonds():
@@ -107,13 +107,13 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
         e = []
         e.append(e_map['bond_type'].index(str(bond.GetBondType())))
         e.append(e_map['stereo'].index(str(bond.GetStereo())))
-        # e.append(e_map['is_conjugated'].index(bond.GetIsConjugated()))
+        e.append(e_map['is_conjugated'].index(bond.GetIsConjugated()))
 
         edge_indices += [[i, j], [j, i]]
         edge_attrs += [e, e]
 
     edge_index = torch.tensor(edge_indices)
-    edge_index = edge_index.t().to(torch.float).view(2, -1)
+    edge_index = edge_index.t().to(torch.long).view(2, -1)
     edge_attr = torch.tensor(edge_attrs, dtype=torch.float).view(-1, len(e))
 
     if edge_index.numel() > 0:  # Sort indices.
