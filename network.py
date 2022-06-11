@@ -12,25 +12,9 @@ from torch import nn
 from torch import optim
 from torch.nn import functional as F
 from torch.utils import data
+from torch_geometric.nn import TransformerConv, TopKPooling, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
-
-
-@dataclass
-class TrainParams:
-    batch_size: int = 64
-    val_batch_size: int = 64
-    learning_rate: float = 3e-3
-    num_epochs: int = 100
-    device: typing.Optional[str] = 'cpu'
-
-
-class DebuggingParams:
-    batch_size: int = 64
-    val_batch_size: int = 64
-    learning_rate: float = 2e-3
-    num_epochs: int = 3
-    device: typing.Optional[str] = 'cpu'
 
 
 class GNN(pl.LightningModule):
@@ -40,14 +24,18 @@ class GNN(pl.LightningModule):
         self.data_dir = data_dir or os.getcwd()  # pass this from now on
 
         self.learning_rate = config['learning_rate']
-        self.node_feature_dim = config['node_feature_dim']
-        self.edge_dim = config['edge_dim']
-        self.hidden_size = config['embedding_dim']
+        self.node_feature_dim = config['node_feature_dimension']
+        self.edge_dim = config['edge_feature_dimension']
+        self.hidden_size = config['embedding_dimension']
+        self.propagation_steps = config['num_propagation_steps']
+        self.num_heads = 1
 
-        self.gat = GATConv(in_channels=(self.node_feature_dim, self.edge_dim, ), out_channels=self.hidden_size,
-                           edge_dim=3)
+        self.gat1 = GATConv(in_channels=self.node_feature_dim, out_channels=self.hidden_size * self.num_heads,
+                            heads=self.num_heads, edge_dim=self.edge_dim, aggr='add')
+        self.gat2 = GATConv(in_channels=self.hidden_size, out_channels=self.hidden_size * self.num_heads,
+                            heads=self.num_heads, edge_dim=self.edge_dim, aggr='add')
 
-        self.final_lin = nn.Linear(self.hidden_size, 1)
+        self.final_lin = nn.Linear(self.hidden_size * self.num_heads, 1)
 
     def forward(self, graphs: Data):
         """
@@ -56,11 +44,19 @@ class GNN(pl.LightningModule):
 
         In the comments below N is the number of nodes in graph_in (across all graphs),
         d the feature dimension, and G is the number of individual molecular graphs.
+        d' is the embedding dimension
         """
 
         # x, edge_attr = graphs.x.float(), graphs.edge_attr.float()
-        graph_embedding = self.gat(x=graphs.x, edge_index=graphs.edge_index, edge_attr=graphs.edge_attr)
-        graph_embedding = F.relu(graph_embedding)
+        # graphs.edge_index = graphs.edge_index.t().to(torch.long)
+        graph_embedding = self.gat1(x=graphs.x, edge_index=graphs.edge_index, edge_attr=graphs.edge_attr)  # [N, d']
+
+        for _ in range(self.propagation_steps):
+            graph_embedding = self.gat2(x=graph_embedding, edge_index=graphs.edge_index)
+
+        graph_embedding = global_mean_pool(graph_embedding, graphs.batch)  # [G, d']
+
+        # graph_embedding = F.relu(graph_embedding)
 
         # 3. Final linear projection.
         final_prediction = self.final_lin(graph_embedding)  # [G, 1]
@@ -71,19 +67,17 @@ class GNN(pl.LightningModule):
         return result
 
     def training_step(self,train_batch, batch_idx):
-        x, y = train_batch
-        print(f'printing x:{x}')
-        print(f'shape of y:{y.shape}') # TODO continue here, for some reason only 1 graph gets passed in but a vector of multiple y (target) values, is this correct???
-        prediction = self.forward(x)
-        print(f'printing prediction:{prediction}')
-        loss = self.mse_loss(prediction, y)
+        # print(f'printing x:{train_batch.x}')
+        # print(f'shape of y:{train_batch.y.shape}') # TODO continue here, for some reason only 1 graph gets passed in but a vector of multiple y (target) values, is this correct???
+        prediction = self.forward(train_batch)
+        # print(f'printing prediction:{prediction}')
+        loss = self.mse_loss(prediction, train_batch.y)
         self.log('train_loss', loss)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
-        graphs, y = val_batch
-        prediction = self.forward(graphs)
-        loss = self.mse_loss(prediction, y)
+        prediction = self.forward(val_batch)
+        loss = self.mse_loss(prediction, val_batch.y)
         self.log('val_loss', loss)
         return {'val_loss': loss}
 
