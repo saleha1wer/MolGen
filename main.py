@@ -1,19 +1,25 @@
-#import pandas as pd
-#import numpy as np
-import os
-#import matplotlib.pyplot as plt
-from functools import partial
+# import matplotlib.pyplot as plt
 # from rdkit import Chem
 # from rdkit.Chem import PandasTools
 # from utils.mol2fingerprint import calc_fps
 # from sklearn.model_selection import train_test_split
 # from sklearn.metrics import mean_squared_error
 # from xgboost import XGBRegressor
+# from xgboost import XGBRegressor
+
+import os
 from pandas import DataFrame
 from utils.mol2graph import Graphs
 import torch
 from network import GNN, GNNDataModule, collate_for_graphs
+
+import numpy as np
 import pytorch_lightning as pl
+from sklearn.model_selection import train_test_split
+from functools import partial
+
+from network import GNN
+from data_module import GNNDataModule, MoleculeDataset
 
 from ray import tune
 from ray.tune import CLIReporter
@@ -24,9 +30,10 @@ from ray.tune.utils import wait_for_gpu
 import optuna
 import time
 
+
 raytune_callback = TuneReportCheckpointCallback(
     metrics={
-        'loss' : 'val_loss'
+        'loss': 'val_loss'
     },
     filename='checkpoint',
     on='validation_end')
@@ -42,10 +49,48 @@ def train_tune(config, checkpoint_dir=None):
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
     trainer.fit(model, datamodule)
-#    trainer.test(model, data_module) #loads the best checkpoint automatically
-
 
 def main():
+# jurrens lines
+
+    adenosine_star = False
+    NUM_NODE_FEATURES = 1
+    NUM_EDGE_FEATURES = 1
+    # for the moment, loading the zip file does not
+    # pd.DataFrame with 'SMILES' and 'pchembl_value_Mean'
+    if adenosine_star:
+        dataset = MoleculeDataset(root='data/adenosine', filename='human_adenosine_ligands')
+    else:
+        dataset = MoleculeDataset(root='data/a2aar', filename='human_a2aar_ligands')
+
+    train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.8, random_state=0)
+
+    data_train = dataset[train_indices]
+    data_test = dataset[test_indices]
+
+    batch_size = 64
+    datamodule_config = {
+        'train_batch_size': batch_size,
+        'val_batch_size': batch_size,
+        'num_workers': 0
+    }
+
+    data_module = GNNDataModule(datamodule_config, data_train, data_test)
+
+    gnn_config = {
+        'learning_rate': 3e-3,
+            # tune.grid_search([1e-3, 3e-3, 1e-2]),
+        'node_feature_dimension': NUM_NODE_FEATURES,
+        'edge_feature_dimension': NUM_EDGE_FEATURES,
+        'num_propagation_steps': 4,
+            #tune.grid_search([3, 4]),
+        'embedding_dimension': 50,
+            #tune.grid_search([64, 128])
+    }
+
+# main lines (so implicitly also bobs)
+
+
     torch.set_default_dtype(torch.float64)
     node_feature_dimension = len(Graphs.ATOM_FEATURIZER.indx2atm)
 
@@ -97,7 +142,9 @@ def main():
                             #'memory'    :   10 * 1024 * 1024 * 1024
                         })
 
-
+    model = GNN(gnn_config)
+    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
+# end of bobs lines
     print('Finished with hyperparameter optimization.')
     best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
     best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')

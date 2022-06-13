@@ -18,6 +18,9 @@ rdBase.DisableLog('rdApp.info')
 rdBase.DisableLog('rdApp.warning')
 
 
+
+
+
 def load_molecules(base_dir, input_file):
     """
     Loads raw SMILES from input file and transform to rdkit molecule
