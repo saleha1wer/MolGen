@@ -28,6 +28,8 @@ raytune_callback = TuneReportCheckpointCallback(
 def main():
 
     adenosine_star = False
+    NUM_NODE_FEATURES = 1
+    NUM_EDGE_FEATURES = 1
     # for the moment, loading the zip file does not
     # pd.DataFrame with 'SMILES' and 'pchembl_value_Mean'
     if adenosine_star:
@@ -50,18 +52,18 @@ def main():
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     gnn_config = {
-        'learning_rate': 1e-3,
+        'learning_rate': 3e-3,
             # tune.grid_search([1e-3, 3e-3, 1e-2]),
-        'node_feature_dimension': 1,
-        'edge_feature_dimension': 3,
+        'node_feature_dimension': NUM_NODE_FEATURES,
+        'edge_feature_dimension': NUM_EDGE_FEATURES,
         'num_propagation_steps': 4,
             #tune.grid_search([3, 4]),
-        'embedding_dimension': 64,
+        'embedding_dimension': 50,
             #tune.grid_search([64, 128])
     }
 
     model = GNN(gnn_config)
-    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=20)
+    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
 
     trainer.fit(model, data_module)
 

@@ -106,8 +106,8 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
 
         e = []
         e.append(e_map['bond_type'].index(str(bond.GetBondType())))
-        e.append(e_map['stereo'].index(str(bond.GetStereo())))
-        e.append(e_map['is_conjugated'].index(bond.GetIsConjugated()))
+        # e.append(e_map['stereo'].index(str(bond.GetStereo())))
+        # e.append(e_map['is_conjugated'].index(bond.GetIsConjugated()))
 
         edge_indices += [[i, j], [j, i]]
         edge_attrs += [e, e]
@@ -121,4 +121,3 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
         edge_index, edge_attr = edge_index[:, perm], edge_attr[perm]
 
     return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, smiles=smiles)
-
