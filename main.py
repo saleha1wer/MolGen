@@ -51,7 +51,6 @@ def train_tune(config, checkpoint_dir=None):
     trainer.fit(model, datamodule)
 
 def main():
-# jurrens lines
 
     adenosine_star = False
     NUM_NODE_FEATURES = 1
@@ -87,8 +86,6 @@ def main():
         'embedding_dimension': 50,
             #tune.grid_search([64, 128])
     }
-
-# main lines (so implicitly also bobs)
 
 
     torch.set_default_dtype(torch.float64)
@@ -136,16 +133,16 @@ def main():
             search_alg=search_alg,
 #            progress_reporter=reporter,
 #            scheduler=scheduler,
-            local_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\tensorboardlogs\\',
+            local_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\tensorboardlogs\\', # change this to your own proper path
                         resources_per_trial={
                             'gpu'   :   1
                             #'memory'    :   10 * 1024 * 1024 * 1024
                         })
 
-    model = GNN(gnn_config)
-    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
-# end of bobs lines
     print('Finished with hyperparameter optimization.')
+    end = time.time()
+    print(f"Elapsed time:{end-start}")
+    print('Starting to load best found model...')
     best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
     best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')
 
@@ -169,7 +166,5 @@ def main():
                          callbacks=[raytune_callback])
     test_results = trainer.test(best_checkpoint_model, test_datamodule)
 
-    end = time.time()
-    print(f"Elapsed time:{end-start}")
 if __name__ == '__main__':
     main()
