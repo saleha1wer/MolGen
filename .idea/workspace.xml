@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="req.txt">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="hyperparameter optimization works. use this for finding optimal values">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/HyperparameterOptimization.py" beforeDir="false" afterPath="$PROJECT_DIR$/HyperparameterOptimization.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,6 +21,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="SET_USER_NAME_GLOBALLY" value="false" />
   </component>
@@ -292,7 +296,70 @@
       <option name="project" value="LOCAL" />
       <updated>1653311921542</updated>
     </task>
-    <option name="localTasksCounter" value="23" />
+    <task id="LOCAL-00023" summary="req.txt">
+      <created>1653312036576</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1653312036576</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Small changes, not very significant">
+      <created>1653312093883</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1653312093883</updated>
+    </task>
+    <task id="LOCAL-00025" summary="Started with the implementation of pytorch lightning, seems to work apart from the fact that the graphs objects are formatted in a very different way from how pyt.light. expects them. any help would be appreciated.">
+      <created>1653747189391</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1653747189391</updated>
+    </task>
+    <task id="LOCAL-00026" summary="Finished large parts of the implementation of pytorch lightning, the training of the model now works (presumably) for gpu and cpu.">
+      <created>1653902396542</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1653902396542</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors">
+      <created>1653998326875</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1653998326875</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property">
+      <created>1654429701001</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1654429701001</updated>
+    </task>
+    <task id="LOCAL-00029" summary="Prints the best results and loss at the end now.">
+      <created>1654436520977</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1654436520977</updated>
+    </task>
+    <task id="LOCAL-00030" summary="Doesnt work because of a permission denied error for bob">
+      <created>1654523283952</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1654523283952</updated>
+    </task>
+    <task id="LOCAL-00031" summary="hyperparameter optimization works. use this for finding optimal values">
+      <created>1654632991514</created>
+      <option name="number" value="00031" />
+      <option name="presentableId" value="LOCAL-00031" />
+      <option name="project" value="LOCAL" />
+      <updated>1654632991514</updated>
+    </task>
+    <option name="localTasksCounter" value="32" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -316,9 +383,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="recent update" />
-    <MESSAGE value="renaming transform function" />
-    <MESSAGE value="adding collate function" />
     <MESSAGE value="pasting TrainParams class, train_neural_network function, and plot_train_and_val_using_altair" />
     <MESSAGE value="file for storing processed ligand data" />
     <MESSAGE value="file for storing processed ligand data, formatting may be still be changed in main.py" />
@@ -336,6 +400,14 @@
     <MESSAGE value="matplotlib plotting" />
     <MESSAGE value="environment.yml" />
     <MESSAGE value="req.txt" />
-    <option name="LAST_COMMIT_MESSAGE" value="req.txt" />
+    <MESSAGE value="Small changes, not very significant" />
+    <MESSAGE value="Started with the implementation of pytorch lightning, seems to work apart from the fact that the graphs objects are formatted in a very different way from how pyt.light. expects them. any help would be appreciated." />
+    <MESSAGE value="Finished large parts of the implementation of pytorch lightning, the training of the model now works (presumably) for gpu and cpu." />
+    <MESSAGE value="Finished basic implementation of Ray Tune hyperparameter optimization. Running into memory issues(?) getting lots of 'the paging file is too small for this operation...' errors" />
+    <MESSAGE value="Working imlpementation of ray tune, note the resources_per_trial property and the num_workers property" />
+    <MESSAGE value="Prints the best results and loss at the end now." />
+    <MESSAGE value="Doesnt work because of a permission denied error for bob" />
+    <MESSAGE value="hyperparameter optimization works. use this for finding optimal values" />
+    <option name="LAST_COMMIT_MESSAGE" value="hyperparameter optimization works. use this for finding optimal values" />
   </component>
 </project>

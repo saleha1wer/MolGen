@@ -9,7 +9,7 @@ from rdkit.Chem import Lipinski
 from rdkit import DataStructs
 from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
-from utils import sascorer
+#from utils import sascorer
 from .nsgaii import similarity_sort, nsgaii_sort
 from .fingerprints import get_fingerprint
 from . import modifier
@@ -127,7 +127,7 @@ class Property:
                           'Valence': desc.NumValenceElectrons,
                           'MR': Crippen.MolMR,
                           'QED': qed,
-                          'SA': sascorer.calculateScore,
+                          #'SA': sascorer.calculateScore,
                           'Bertz': BertzCT}
 
     def __call__(self, mols):

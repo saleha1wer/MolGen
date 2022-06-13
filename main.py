@@ -1,79 +1,128 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from rdkit import Chem
-from rdkit.Chem import PandasTools
-from utils.mol2fingerprint import calc_fps
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import mean_squared_error
-from xgboost import XGBRegressor
+#import pandas as pd
+#import numpy as np
+import os
+#import matplotlib.pyplot as plt
+from functools import partial
+# from rdkit import Chem
+# from rdkit.Chem import PandasTools
+# from utils.mol2fingerprint import calc_fps
+# from sklearn.model_selection import train_test_split
+# from sklearn.metrics import mean_squared_error
+# from xgboost import XGBRegressor
+from pandas import DataFrame
 from utils.mol2graph import Graphs
-from network import GNN, train_neural_network, plot_train_and_val_using_altair, collate_for_graphs, plot_train_and_val_using_mpl, TrainParams, QuickParams
+import torch
+from network import GNN, GNNDataModule, collate_for_graphs
+import pytorch_lightning as pl
 
-def canonical_smiles(smi):
-    return Chem.MolToSmiles(Chem.MolFromSmiles(smi), canonical=True)
+from ray import tune
+from ray.tune import CLIReporter
+from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining
+from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
+from ray.tune.suggest.optuna import OptunaSearch
+from ray.tune.utils import wait_for_gpu
+import optuna
+import time
+
+raytune_callback = TuneReportCheckpointCallback(
+    metrics={
+        'loss' : 'val_loss'
+    },
+    filename='checkpoint',
+    on='validation_end')
+
+def train_tune(config, checkpoint_dir=None):
+    model = GNN(config)
+    datamodule = GNNDataModule(config)
+
+    trainer = pl.Trainer(max_epochs=config['max_epochs'],
+                         accelerator='gpu',
+                         devices=1,
+                         enable_progress_bar=True,
+                         enable_checkpointing=True,
+                         callbacks=[raytune_callback])
+    trainer.fit(model, datamodule)
+#    trainer.test(model, data_module) #loads the best checkpoint automatically
 
 
 def main():
-    try:
+    torch.set_default_dtype(torch.float64)
+    node_feature_dimension = len(Graphs.ATOM_FEATURIZER.indx2atm)
 
-        # df = pd.read_pickle('data/papyrus_ligand.zip')
-        df = pd.read_csv('data/papyrus_ligand')
+    GNN_config = dict(
+        train_batch_size=64,
+        val_batch_size=64,
+        num_workers=0)
 
-    except Exception as e:
-        ## read SMILES
-        print('Could not load data. \nProcessing data: DrugEx/data/LIGAND_RAW.tsv.',e)
+    DataModule_config = dict(node_feature_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
+        num_propagation_steps=tune.randint(1, 15),
+        embeddings_dimension=len(Graphs.ATOM_FEATURIZER.indx2atm),
+        learning_rate=tune.loguniform(0.0001, 0.7),
+        momentum=tune.loguniform(0.001, 1.0),
+        weight_decay=tune.loguniform(0.00001, 1.0),
+        max_epochs=30)
 
-        df = pd.read_csv('DrugEx/data/LIGAND_RAW.tsv', sep='\t', header=0)
-        df = df[['Smiles', 'pChEMBL_Value']]
+#    scheduler = ASHAScheduler(
+#       max_t=50,
+#       grace_period=1,
+#       reduction_factor=2
+#   )
 
+    reporter = CLIReporter(
+#        parameter_columns=['learning_rate', 'num_propagation_steps', 'weight_decay'],
+        metric_columns=['loss', 'training_iteration']
+    )
 
-    df = df.dropna(axis=0)  # drop rows with missing values
-    # smile = smile.replace('[O]', 'O').replace('[C]', 'C') \
-    #     .replace('[N]', 'N').replace('[B]', 'B') \
-    #     .replace('[2H]', '[H]').replace('[3H]', '[H]')
-    df['Smiles'] = df['Smiles'].map(canonical_smiles)
-    df = df.drop_duplicates(subset=['Smiles'])
-    print('Finished preprocessing Smiles')
+    search_alg = OptunaSearch(
+        metric='loss',
+        mode='min'
+    )
 
-    PandasTools.AddMoleculeColumnToFrame(df, 'Smiles', 'Molecule', includeFingerprints=False)
-    print('Processed Smiles to Mol object')
+    def join_dicts(a, b):
+        return dict(list(a.items()) + list(b.items()))
 
-    # REGRESSION TARGET VALUES
-    target_values = df['pChEMBL_Value'].to_numpy()
+    joined_config = join_dicts(GNN_config, DataModule_config)
 
-    # FEATURIZATION OF MOLECULES
-    fps = calc_fps(df['Molecule'])  # FINGERPRINT METHOD (DrugEx method)
-    print('Finished calculating fingerprints')
-
-    graphs = np.array([[]])  # TUTORIAL METHOD (JOHN BRADSHAW)
-    for mol in df['Molecule']:
-        graph = Graphs.from_mol(mol)
-        graph_gm_object = Data(x=graph.node_features, edge_index=edge_index, edge_attr=graph_gm_object.edge_features)
-        graphs = np.append(graphs, graph_gm_object)
-    print('Finished making graphs')
-
-
-    # MAKING TRAIN AND TEST SET (validation?)
-    y_train, y_test, fps_train, fps_test, graphs_train, graphs_test = train_test_split(target_values, fps, graphs, test_size=0.2)
-    print(y_train.shape, '\n', fps_train.shape, graphs_train.shape)
-
-
-    # GNN METHOD
-    gnn = GNN(len(Graphs.ATOM_FEATURIZER.indx2atm))
-
-    graphs_train = pd.DataFrame({'x': graphs_train, 'y': y_train})
-    graphs_val = pd.DataFrame({'x': graphs_test, 'y': y_test})
-
-    params = QuickParams()
-
-    out = train_neural_network(train_dataset=graphs_train, val_dataset=graphs_val, neural_network=gnn, collate_func=collate_for_graphs) #...ETC)
+    start = time.time()
+    print(f"Starttime:{start}")
+    analysis = tune.run(partial(train_tune),
+            config=joined_config,
+            num_samples=10, # number of samples taken in the entire sample space
+            search_alg=search_alg,
+#            progress_reporter=reporter,
+#            scheduler=scheduler,
+            local_dir='C:\\Users\\bwvan\\PycharmProjects\\GenMol\\tensorboardlogs\\',
+                        resources_per_trial={
+                            'gpu'   :   1
+                            #'memory'    :   10 * 1024 * 1024 * 1024
+                        })
 
 
-    # plot = plot_train_and_val_using_altair(out['train_loss_list'], out['val_lost_list'])
-    # save(plot, 'chart_lr=2e-3.png')  # .pdf doesn't work?
+    print('Finished with hyperparameter optimization.')
+    best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
+    best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')
 
-    plot_train_and_val_using_mpl(out['train_loss_list'], out['val_lost_list'], name='arbitrary plotname', save=True)
+    print(f"Best trial configuration:{best_trial.config}")
+    print(f"Best trial final validation loss:{best_trial.last_result['loss']}")
 
+#    print(f"attempting to load from dir: {best_trial.checkpoint.value}")
+#    print(f"attempting to load file: {best_trial.checkpoint.value + 'checkpoint'}")
+
+    test_config = join_dicts(best_configuration, DataModule_config)
+
+    best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value+'/checkpoint')
+
+    test_datamodule = GNNDataModule(test_config)
+
+    trainer = pl.Trainer(max_epochs=test_config['max_epochs'],
+                         accelerator='gpu',
+                         devices=1,
+                         enable_progress_bar=True,
+                         enable_checkpointing=True,
+                         callbacks=[raytune_callback])
+    test_results = trainer.test(best_checkpoint_model, test_datamodule)
+
+    end = time.time()
+    print(f"Elapsed time:{end-start}")
 if __name__ == '__main__':
     main()
