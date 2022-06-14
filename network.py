@@ -80,7 +80,6 @@ class GNN(pl.LightningModule):
                                       device=m.device, dtype=m.dtype)
         graph_embedding.index_add_(0, graphs_in.batch, weighted_embeddings)  # [G, d']
 
-
         # 3. Final linear projection.
         final_prediction = self.final_lin(graph_embedding)  # [G, 1]
         return final_prediction

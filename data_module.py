@@ -72,11 +72,14 @@ class MoleculeDataset(Dataset):
         """ - Equivalent to __getitem__ in pytorch
             - Is not needed for PyG's InMemoryDataset
         """
+        local_dir = 'C:\\Users\\bwvan\\PycharmProjects\\GenMol\\data\\a2aar\\processed'
         if self.test:
-            data = torch.load(os.path.join(self.processed_dir,
+            data = torch.load(os.path.join(local_dir,
+                                    #       self.processed_dir,
                                            f'data_test_{idx}.pt'))
         else:
-            data = torch.load(os.path.join(self.processed_dir,
+            data = torch.load(os.path.join(local_dir,
+                                    #       self.processed_dir,
                                            f'data_{idx}.pt'))
         return data
 
