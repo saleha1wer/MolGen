@@ -55,7 +55,7 @@ def main():
         'num_workers': 0
     }
 
-    datamodule = GNNDataModule(datamodule_config, data_train, data_test)
+    data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     gnn_config = {
         'learning_rate': tune.loguniform(1e-4, 1e-1),
@@ -128,15 +128,13 @@ def main():
 
     best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value + '/checkpoint')
 
-    test_datamodule = GNNDataModule(datamodule_config)
-
-    trainer = pl.Trainer(max_epochs=100,
+    trainer = pl.Trainer(max_epochs=10,
                          accelerator='gpu',
                          devices=1,
                          enable_progress_bar=True,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
-    test_results = trainer.test(best_checkpoint_model, test_datamodule)
+    test_results = trainer.test(best_checkpoint_model, data_module)
 
     end = time.time()
     print(f"Elapsed time:{end - start}")
