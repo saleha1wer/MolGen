@@ -17,7 +17,7 @@ print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
 print(f"Torch geometric version: {torch_geometric.__version__}")
 
-
+# https://github.com/deepfindr/gnn-project/blob/main/dataset_featurizer.py
 class MoleculeDataset(Dataset):
     def __init__(self, root, filename, test=False, transform=None, pre_transform=None):
         """
@@ -51,7 +51,7 @@ class MoleculeDataset(Dataset):
 
     def process(self):
         self.data = pd.read_csv(self.raw_paths[0]).reset_index()
-        # self.data = self.data.head(500)
+        # self.data = self.data.head(1000)
         for index, mol in tqdm(self.data.iterrows(), total=self.data.shape[0]):
             # Featurize molecule into PyG graph object Data
             data = from_smiles(mol['SMILES'])
@@ -64,10 +64,6 @@ class MoleculeDataset(Dataset):
                 torch.save(data,
                            os.path.join(self.processed_dir,
                                         f'data_{index}.pt'))
-
-    def _get_label(self, label):
-        label = np.asarray([label])
-        return torch.tensor(label, dtype=torch.int64)
 
     def len(self):
         return self.data.shape[0]

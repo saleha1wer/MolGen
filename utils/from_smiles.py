@@ -98,7 +98,7 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
 
     x = torch.tensor(xs, dtype=torch.float).view(len(xs), -1)  # for some reason, this works with the dataloader? [len(xs), -1]
 
-    edge_indices, edge_attrs = [], []
+    edge_indices, edge_attrs = [], []  # (2, |E|), [[0, 1], [0, 3], ... ], edge_attrs: (|E|, len(e))
     for bond in mol.GetBonds():
         i = bond.GetBeginAtomIdx()
         j = bond.GetEndAtomIdx()

@@ -43,27 +43,27 @@ def main():
     data_test = dataset[test_indices]
 
     batch_size = 64
-    datamodule_config = {
+    data_module_config = {
         'train_batch_size': batch_size,
         'val_batch_size': batch_size,
         'num_workers': 0
     }
 
-    data_module = GNNDataModule(datamodule_config, data_train, data_test)
+    data_module = GNNDataModule(data_module_config, data_train, data_test)
 
     gnn_config = {
-        'learning_rate': tune.grid_search([1e-3, 3e-3, 1e-2]),
+        # 'learning_rate': 2e-3,
+        'learning_rate': tune.loguniform(1e-4, 1e-1, base=10),
         'node_feature_dimension': NUM_NODE_FEATURES,
         'edge_feature_dimension': NUM_EDGE_FEATURES,
         'num_propagation_steps': 4,
             # tune.grid_search([3, 4]),
-        'embedding_dimension': 45,
-            # tune.grid_search([64, 128])
+        'embedding_dimension': tune.choice([32, 64, 128, 256])   # 32, 64, 128, 256
     }
 
     # model = GNN(gnn_config)
     # trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
-
+    #
     # trainer.fit(model, data_module)
 
     def train_tune(config, checkpoint_dir=None):
@@ -75,28 +75,28 @@ def main():
                              enable_progress_bar=True,
                              enable_checkpointing=True,
                              callbacks=[raytune_callback])
-        trainer.fit(model, datamodule)
+        trainer.fit(model, data_module)
 
-
+    start = time.time()
     # trainer.test(model, data_module) #loads the best checkpoint automatically
     reporter = CLIReporter(parameter_columns=['learning_rate', 'num_propagation_steps', 'weight_decay'],
                            metric_columns=['loss', 'training_iteration']
     )
 
-    search_alg = OptunaSearch(
-        metric='loss',
-        mode='min'
-    )
+    # search_alg = OptunaSearch(
+    #     metric='loss',
+    #     mode='min'
+    # )
 
     analysis = tune.run(partial(train_tune),
-                        config=joined_config,
-                        num_samples=2,  # number of samples taken in the entire sample space
-                        search_alg=search_alg,
-                        #            progress_reporter=reporter,
-                        #            scheduler=scheduler,
-                        local_dir='',
+                        config=gnn_config,
+                        num_samples=10,  # number of samples taken in the entire sample space
+                        # search_alg=search_alg,
+                        progress_reporter=reporter,
+                        # scheduler=scheduler,
+                        local_dir='/Users/Jurren/Documents/GitHub/GenMol',
                         resources_per_trial={
-                            'gpu': 0
+                            'cpu': 0
                             # 'memory'    :   10 * 1024 * 1024 * 1024
                         })
 
@@ -110,19 +110,17 @@ def main():
     #    print(f"attempting to load from dir: {best_trial.checkpoint.value}")
     #    print(f"attempting to load file: {best_trial.checkpoint.value + 'checkpoint'}")
 
-    test_config = join_dicts(best_configuration, DataModule_config)
+    test_config = best_configuration
 
     best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value + '/checkpoint')
 
-    test_datamodule = GNNDataModule(test_config)
-
     trainer = pl.Trainer(max_epochs=test_config['max_epochs'],
-                         accelerator='gpu',
+                         accelerator='cpu',
                          devices=1,
                          enable_progress_bar=True,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
-    test_results = trainer.test(best_checkpoint_model, test_datamodule)
+    test_results = trainer.test(best_checkpoint_model, data_module)
 
     end = time.time()
     print(f"Elapsed time:{end - start}")
