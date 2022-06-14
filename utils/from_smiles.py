@@ -1,6 +1,5 @@
-# SOURCE CODE FROM PYTORCH-GEOMETRIC
-# TRANSLATES SMILES OBJECTS TO GRAPHS
-
+# SOURCE CODE FROM PYTORCH-GEOMETRIC (PYG)
+# ADDED NODE FEATURES AND EDGE FEATURES ARGUMENT TO FROM_SMILES FUNCTION AND TRANSPOSED X SHAPE FOR PYG DATALOADER
 
 import torch
 
@@ -86,8 +85,8 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
     for atom in mol.GetAtoms():
         x = []
         x.append(x_map['atomic_num'].index(atom.GetAtomicNum()))
-        # x.append(x_map['chirality'].index(str(atom.GetChiralTag())))
-        # x.append(x_map['degree'].index(atom.GetTotalDegree()))
+        x.append(x_map['chirality'].index(str(atom.GetChiralTag())))
+        x.append(x_map['degree'].index(atom.GetTotalDegree()))
         # x.append(x_map['formal_charge'].index(atom.GetFormalCharge()))
         # x.append(x_map['num_hs'].index(atom.GetTotalNumHs()))
         # x.append(x_map['num_radical_electrons'].index(
