@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
 
 from utils.from_smiles import from_smiles
-
+from utils.encode_ligands import prot_target2array
 
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
@@ -63,6 +63,21 @@ class MoleculeDataset(Dataset):
                 torch.save(data,
                            os.path.join(self.processed_dir,
                                         f'data_{index}.pt'))
+# When implementing two-to-one: 
+#   Decide how to save encoded protein targets, 
+#   this could be added to the above loop
+#         protein_targets = []
+#         encoded = dict()
+#         count = 0
+#         for target in mol['target_id']:
+#             if target in encoded.keys():
+#                 array = encoded[target]
+#             else:
+#                 array = prot_target2array(target)
+#                 encoded[target] = array
+#             protein_targets.append(array)
+#         print('Finished encoding protein targets')
+#         protein_targets = np.array(protein_targets)
 
     def len(self):
         return self.data.shape[0]
