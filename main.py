@@ -15,7 +15,7 @@ from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining, HyperBan
 from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
 from ray.tune.suggest.optuna import OptunaSearch
 from ray.tune.suggest.bohb import TuneBOHB
-
+from torch_geometric.nn.models import GIN, GAT, PNA,GraphSAGE
 
 from ray.tune.utils import wait_for_gpu
 
@@ -33,7 +33,10 @@ def main():
     adenosine_star = False
     NUM_NODE_FEATURES = 9
     NUM_EDGE_FEATURES = 3
-
+    max_epochs = 200
+    n_samples = 100
+    max_t_per_trial = 1000
+    batch_size = 64
 
     if adenosine_star:
         dataset = MoleculeDataset(root=os.getcwd() + '/data/adenosine', filename='human_adenosine_ligands')
@@ -45,29 +48,27 @@ def main():
     data_train = dataset[train_indices.tolist()]
     data_test = dataset[test_indices.tolist()]
 
-    batch_size = 64
+
     datamodule_config = {
-        'train_batch_size': batch_size,
-        'val_batch_size': batch_size,
+        'batch_size': batch_size,
         'num_workers': 0
     }
 
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     gnn_config = {
-        'lr': tune.loguniform(1e-4, 1e-1),  # learning rate
         'N': NUM_NODE_FEATURES,
         'E': NUM_EDGE_FEATURES,
-        'num_propagation_steps': tune.randint(3, 12),
-            # tune.grid_search([3, 4]),
-        'hidden': tune.choice([32, 64, 128, 256])   # embedding/hidden dimensions
+        'lr': tune.loguniform(1e-4, 1e-1),  # learning rate
+        'hidden': tune.choice([16,32,64,128,256,512,1024]),  # embedding/hidden dimensions
+        'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
+        'n_layers': tune.choice([2,3,4,5,6,7])
+        # 'batch_size': tune.choice([16,32,64,128])
     }
-
 
     def train_tune(config, checkpoint_dir=None):
         model = GNN(config)
-
-        trainer = pl.Trainer(max_epochs=100,
+        trainer = pl.Trainer(max_epochs=max_epochs,
                              accelerator='cpu',
                              devices=1,
                              enable_progress_bar=True,
@@ -83,7 +84,7 @@ def main():
 
     bohb_scheduler = HyperBandForBOHB(
         time_attr='training_iteration',
-        max_t=100,
+        max_t=max_t_per_trial,
         metric='loss',
         mode='min'
     )
@@ -100,7 +101,7 @@ def main():
 
     analysis = tune.run(partial(train_tune),
                         config=gnn_config,
-                        num_samples=1,  # number of samples taken in the entire sample space
+                        num_samples=n_samples,  # number of samples taken in the entire sample space
                         search_alg=bohb_search_alg,
                         scheduler=bohb_scheduler,
                         local_dir=os.getcwd(),
@@ -121,14 +122,19 @@ def main():
 
     best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value + '/checkpoint')
 
-    trainer = pl.Trainer(max_epochs=10,
+    best_config_model = GNN(best_configuration)
+
+#    data_module = GNNDataModule(datamodule_config, data_train, data_test)
+
+    trainer = pl.Trainer(max_epochs=max_epochs,
                          accelerator='gpu',
                          devices=1,
                          enable_progress_bar=True,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
-    test_results = trainer.test(best_checkpoint_model, data_module)
+    test_data_loader = data_module.test_dataloader()
 
+    test_results = trainer.test(best_config_model, test_data_loader)
     end = time.time()
     print(f"Elapsed time:{end - start}")
 
