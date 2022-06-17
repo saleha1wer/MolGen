@@ -31,22 +31,19 @@ raytune_callback = TuneReportCheckpointCallback(
 def main():
 
     adenosine_star = False
-    NUM_NODE_FEATURES = 3
-    NUM_EDGE_FEATURES = 1
+    NUM_NODE_FEATURES = 9
+    NUM_EDGE_FEATURES = 3
 
 
     if adenosine_star:
-        dataset = MoleculeDataset(root='data/adenosine', filename='human_adenosine_ligands')
+        dataset = MoleculeDataset(root=os.getcwd() + '/data/adenosine', filename='human_adenosine_ligands')
     else:
-        dataset = MoleculeDataset(root='data/a2aar', filename='human_a2aar_ligands')
-
+        dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands')
 
     train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.8, random_state=0)
 
     data_train = dataset[train_indices.tolist()]
     data_test = dataset[test_indices.tolist()]
-
-
 
     batch_size = 64
     datamodule_config = {
@@ -58,18 +55,14 @@ def main():
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     gnn_config = {
-        'learning_rate': tune.loguniform(1e-4, 1e-1),
-        'node_feature_dimension': NUM_NODE_FEATURES,
-        'edge_feature_dimension': NUM_EDGE_FEATURES,
+        'lr': tune.loguniform(1e-4, 1e-1),  # learning rate
+        'N': NUM_NODE_FEATURES,
+        'E': NUM_EDGE_FEATURES,
         'num_propagation_steps': tune.randint(3, 12),
             # tune.grid_search([3, 4]),
-        'embedding_dimension': tune.choice([32, 64, 128, 256])   # 32, 64, 128, 256
+        'hidden': tune.choice([32, 64, 128, 256])   # embedding/hidden dimensions
     }
 
-    # model = GNN(gnn_config)
-    # trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
-
-    # trainer.fit(model, data_module)
 
     def train_tune(config, checkpoint_dir=None):
         model = GNN(config)
@@ -107,12 +100,12 @@ def main():
 
     analysis = tune.run(partial(train_tune),
                         config=gnn_config,
-                        num_samples=2,  # number of samples taken in the entire sample space
+                        num_samples=1,  # number of samples taken in the entire sample space
                         search_alg=bohb_search_alg,
                         scheduler=bohb_scheduler,
-                        local_dir='',
+                        local_dir=os.getcwd(),
                         resources_per_trial={
-                            'gpu': 1
+                            'cpu': 1
                             # 'memory'    :   10 * 1024 * 1024 * 1024
                         })
 
