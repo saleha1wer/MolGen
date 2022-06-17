@@ -10,7 +10,9 @@ import pytorch_lightning as pl
 from pytorch_lightning.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
 
 from utils.from_smiles import from_smiles
-from utils.encode_ligands import prot_target2array
+from utils.encode_protein import prot_target2array
+
+from sklearn.model_selection import train_test_split
 
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
@@ -101,25 +103,30 @@ class GNNDataModule(pl.LightningDataModule):
     def __init__(self, config, data_train, data_test):
         super().__init__()
         self.prepare_data_per_node = True
-        self.val_batch_size = config['val_batch_size']
-        self.train_batch_size = config['train_batch_size']
+        self.batch_size = config['batch_size']
         self.num_workers = config['num_workers']
+        data_train, data_val = train_test_split(data_train, test_size = 0.1, random_state=0) #TODO add a randomstate
         self.train_data = data_train
+        self.val_data = data_val
         self.test_data = data_test
 
     def train_dataloader(self) -> TRAIN_DATALOADERS:
         train_dataloader = DataLoader(dataset=self.train_data,
-                                      batch_size=self.train_batch_size,
+                                      batch_size=self.batch_size,
                                       shuffle=True,
                                       num_workers=self.num_workers)
         return train_dataloader
 
     def val_dataloader(self) -> EVAL_DATALOADERS:
-        val_dataloader = DataLoader(dataset=self.test_data,
-                                    batch_size=self.val_batch_size,
+        val_dataloader = DataLoader(dataset=self.val_data,
+                                    batch_size=self.batch_size,
                                     shuffle=False,
                                     num_workers=self.num_workers)
         return val_dataloader
 
     def test_dataloader(self) -> EVAL_DATALOADERS:
-        return self.val_dataloader
+        test_dataloader = DataLoader(dataset=self.test_data,
+                                    batch_size=self.batch_size,
+                                    shuffle=False,
+                                    num_workers=self.num_workers)
+        return test_dataloader
