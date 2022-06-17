@@ -38,8 +38,7 @@ class GNN(pl.LightningModule):
         self.layer_type = config['layer_type']
         self.num_layers = config['n_layers']
         dim = self.hidden_size
-        self.model = self.layer_type(num_features, dim, self.num_layers,norm=torch.nn.BatchNorm1d(dim))
-
+        self.gnn = self.layer_type(num_features, dim, self.num_layers,norm=torch.nn.BatchNorm1d(dim))
         # nn1 = nn.Sequential(Linear(num_features, dim), ReLU(), Linear(dim, dim))
         # self.conv1 = GINConv(nn1)
         # self.bn1 = torch.nn.BatchNorm1d(dim)
@@ -62,12 +61,11 @@ class GNN(pl.LightningModule):
 
         self.fc1 = Linear(dim, dim)
         self.fc2 = Linear(dim, 1)
-
         self.save_hyperparameters()
 
     def forward(self, graphs):
         x, edge_index, batch = graphs.x, graphs.edge_index, graphs.batch
-        x = F.relu(self.model(x, edge_index))
+        x = F.relu(self.gnn(x, edge_index))
         x = global_add_pool(x, batch)
         x = F.relu(self.fc1(x))
         x = F.dropout(x, p=0.5, training=self.training)

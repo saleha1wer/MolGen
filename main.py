@@ -127,13 +127,14 @@ def main():
 #    data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     trainer = pl.Trainer(max_epochs=max_epochs,
-                         accelerator='gpu',
+                         accelerator='cpu',
                          devices=1,
                          enable_progress_bar=True,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
+
     test_data_loader = data_module.test_dataloader()
-    
+
     test_results = trainer.test(best_config_model, test_data_loader)
     end = time.time()
     print(f"Elapsed time:{end - start}")
