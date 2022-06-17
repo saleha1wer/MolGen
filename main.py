@@ -47,8 +47,7 @@ def main():
 
     batch_size = 64
     datamodule_config = {
-        'train_batch_size': batch_size,
-        'val_batch_size': batch_size,
+        'batch_size': batch_size,
         'num_workers': 0
     }
 
@@ -67,7 +66,7 @@ def main():
     def train_tune(config, checkpoint_dir=None):
         model = GNN(config)
 
-        trainer = pl.Trainer(max_epochs=100,
+        trainer = pl.Trainer(max_epochs=3,
                              accelerator='cpu',
                              devices=1,
                              enable_progress_bar=True,
@@ -88,12 +87,12 @@ def main():
         mode='min'
     )
 
-    optuna_search_alg = OptunaSearch(
+    bohb_search_alg = TuneBOHB(
         metric='loss',
         mode='min'
     )
 
-    bohb_search_alg = TuneBOHB(
+    optuna_search_alg = OptunaSearch(
         metric='loss',
         mode='min'
     )
@@ -121,13 +120,19 @@ def main():
 
     best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value + '/checkpoint')
 
-    trainer = pl.Trainer(max_epochs=10,
+    best_config_model = GNN(best_configuration)
+
+#    data_module = GNNDataModule(datamodule_config, data_train, data_test)
+
+    trainer = pl.Trainer(max_epochs=3,
                          accelerator='gpu',
                          devices=1,
                          enable_progress_bar=True,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
-    test_results = trainer.test(best_checkpoint_model, data_module)
+    test_data_loader = data_module.test_dataloader()
+
+    test_results = trainer.test(best_config_model, test_data_loader)
 
     end = time.time()
     print(f"Elapsed time:{end - start}")
