@@ -31,10 +31,10 @@ class GNN(pl.LightningModule):
         self.hidden_size = config['hidden']
         self.layer_type = config['layer_type']
         self.num_layers = config['n_layers']
-        self.batch_size = 64
+        self.batch_size = config['batch_size']
         dim = self.hidden_size
 
-        self.gnn = self.layer_type(num_features, dim, self.num_layers,norm=torch.nn.BatchNorm1d(dim))
+        self.gnn = self.layer_type(num_features, dim, self.num_layers, norm=torch.nn.BatchNorm1d(dim))
 
         # self.pool = global_add_pool
         if config['pool'] == 'mean':
