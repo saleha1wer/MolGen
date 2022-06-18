@@ -120,7 +120,8 @@ finetune_data_module = GNNDataModule(datamodule_config, f_data_train, f_data_tes
 
 ## Finetuning
 order = 1 
-epochs = 30
+epochs = 50
+pretrain_epochs = 100
 tag = 'gtot_cosine'
 patience=20
 
@@ -145,7 +146,7 @@ gnn_config = {
 }
 
 source_model = GNN(gnn_config)
-trainer = pl.Trainer(max_epochs=50,
+trainer = pl.Trainer(max_epochs=pretrain_epochs,
                         accelerator='cpu',
                         devices=1,
                         enable_progress_bar=True,
@@ -171,7 +172,6 @@ model_param_group.append({"params": finetuned_model.fc2.parameters()})
 
 optimizer = optim.Adam(model_param_group, lr=finetuned_model.learning_rate)
 # create intermediate layer getter
-return_layers = ['gnn.gnns.4.mlp.2']
 return_layers = ['last_layer']
 # get the output feature map of the mediate layer in full model
 source_getter = IntermediateLayerGetter(source_model, return_layers=return_layers)
