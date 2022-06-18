@@ -40,9 +40,11 @@ class GNN(pl.LightningModule):
         dim = self.hidden_size
 
 
-        self.gnn = self.layer_type(num_features, dim, self.num_layers,norm=torch.nn.BatchNorm1d(dim))
+        self.gnn = self.layer_type(num_features, dim, self.num_layers,norm=torch.nn.BatchNorm1d(dim)) 
+        self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
+        # self.last_layer = self.gnn._modules['convs'][0]
 
-        # self.pool = global_add_pool
+               # self.pool = global_add_pool
         if config['pool'] == 'mean':
             self.pool = global_mean_pool
         elif config['pool'] == 'GlobalAttention':

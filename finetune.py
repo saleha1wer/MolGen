@@ -19,7 +19,8 @@ from GTOT_Tuning.chem.splitters import scaffold_split, random_split, random_scaf
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from copy import deepcopy
-criterion = nn.BCEWithLogitsLoss(reduction="none")
+
+criterion = nn.MSELoss(reduction="mean")
 
 def train_epoch(model, device, loader, optimizer, weights_regularization, backbone_regularization,
                 head_regularization, target_getter,
@@ -32,6 +33,7 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         intermediate_output_s, output_s = source_getter(batch)
         intermediate_output_t, output_t = target_getter(batch)
         pred = output_t
+
         fea_s = source_getter._model.get_bottleneck()
         fea = target_getter._model.get_bottleneck()
         # intermediate_output_s
@@ -97,18 +99,24 @@ def eval(model, device, loader):
     metric = np.mean(eval_meter.compute_metric('rmse'))
     return metric, sum(loss_sum) / len(loss_sum)
 
+pretrain_dataset = MoleculeDataset(root=os.getcwd() + '/data/adenosine', filename='human_adenosine_ligands')
 
-dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands')
+finetune_dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands')
 
-train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.8, random_state=0)
-data_train = dataset[train_indices.tolist()]
-data_test = dataset[test_indices.tolist()]
+pr_train_indices, pr_test_indices = train_test_split(np.arange(pretrain_dataset.len()), train_size=0.8, random_state=0)
+pr_data_train = pretrain_dataset[pr_train_indices.tolist()]
+pr_data_test = pretrain_dataset[pr_test_indices.tolist()]
+
+f_train_indices, f_test_indices = train_test_split(np.arange(finetune_dataset.len()), train_size=0.8, random_state=0)
+f_data_train = finetune_dataset[f_train_indices.tolist()]
+f_data_test = finetune_dataset[f_test_indices.tolist()]
 
 datamodule_config = {
     'batch_size': 64,
     'num_workers': 0}
-data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
+pretrain_data_module = GNNDataModule(datamodule_config, pr_data_train, pr_data_test)
+finetune_data_module = GNNDataModule(datamodule_config, f_data_train, f_data_test)
 
 ## Finetuning
 order = 1 
@@ -116,14 +124,14 @@ epochs = 30
 tag = 'gtot_cosine'
 patience=20
 
-trade_off_backbone =  0.001  # between 5e-6 and 10
-trade_off_head = 0.001  # between 5e-6 and 1
+trade_off_backbone =  0.0005  # between 5e-6 and 10
+trade_off_head = 0.1  # between 5e-6 and 1
 # fine tuning params^  - can have different learning rate for each part of the gnn
 
 device = torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
-train_loader = data_module.train_dataloader()
-test_loader = data_module.test_dataloader()
-val_loader = data_module.val_dataloader()
+train_loader = finetune_data_module.train_dataloader()
+test_loader = finetune_data_module.test_dataloader()
+val_loader = finetune_data_module.val_dataloader()
 # train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 gnn_config = {
     'N': 9,
@@ -132,17 +140,17 @@ gnn_config = {
     'hidden': 64,  # embedding/hidden dimensions
     'layer_type': GIN,
     'pool': 'GlobalAttention',
-    'n_layers': 3
+    'n_layers': 5
     # 'batch_size': tune.choice([16,32,64,128])
 }
 
 source_model = GNN(gnn_config)
-trainer = pl.Trainer(max_epochs=10,
+trainer = pl.Trainer(max_epochs=50,
                         accelerator='cpu',
                         devices=1,
                         enable_progress_bar=True,
                         enable_checkpointing=True)
-trainer.fit(source_model, data_module)
+trainer.fit(source_model, pretrain_data_module)
 
 finetuned_model = deepcopy(source_model)
 finetuned_model.to(device)
@@ -164,7 +172,7 @@ model_param_group.append({"params": finetuned_model.fc2.parameters()})
 optimizer = optim.Adam(model_param_group, lr=finetuned_model.learning_rate)
 # create intermediate layer getter
 return_layers = ['gnn.gnns.4.mlp.2']
-return_layers = ['gnn']
+return_layers = ['last_layer']
 # get the output feature map of the mediate layer in full model
 source_getter = IntermediateLayerGetter(source_model, return_layers=return_layers)
 target_getter = IntermediateLayerGetter(finetuned_model, return_layers=return_layers)
@@ -228,7 +236,7 @@ for epoch in range(1, epochs):
         break
     stopper.print_best_results(i_epoch=epoch, val_cls_loss=val_loss, train_acc=train_acc, val_score=val_acc,
                                 test_socre=test_acc, gnn_type=gnn_config['layer_type'],
-                                dataset=dataset, tag=tag)
+                                dataset=finetune_dataset, tag=tag)
 
 training_time.print_mean_sum_time(prefix='Training')
 test_time.print_mean_sum_time(prefix='Test')
