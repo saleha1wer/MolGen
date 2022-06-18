@@ -26,19 +26,19 @@ from torch_geometric.nn.models import GIN, GAT, PNA
 from torch.nn import ReLU, Sequential
 
 class GNN(pl.LightningModule):
-    def __init__(self, config, data_dir=None,name='GNN'):
+    def __init__(self, config, data_dir=None, name='GNN'):
         super(GNN, self).__init__()
         self.name = name
         self.data_dir = data_dir or os.getcwd()  # pass this from now on
-        #
+        self.input_heads = config['input_heads']
         self.learning_rate = config['lr']
         num_features = config['N']
         self.edge_dim = config['E']
         self.hidden_size = config['hidden']
         self.layer_type = config['layer_type']
         self.num_layers = config['n_layers']
+        self.batch_size = 64
         dim = self.hidden_size
-
 
         self.gnn = self.layer_type(num_features, dim, self.num_layers,norm=torch.nn.BatchNorm1d(dim))
 
@@ -51,8 +51,14 @@ class GNN(pl.LightningModule):
             raise ValueError('pool type not supported')
 
         self.fc1 = Linear(dim, dim)
-        self.fc2 = Linear(dim, 1)
-        
+
+        if self.input_heads == 1:
+            self.fc2 = Linear(dim, 1)
+
+        if self.input_heads == 2:
+            self.fc_1 = Linear(4, dim)
+            self.fc2 = Linear(2 * dim, 1)
+
         self.save_hyperparameters()
         self.emb_f = None
 
@@ -63,30 +69,35 @@ class GNN(pl.LightningModule):
         self.emb_f = self.pool(x, batch)
         x = F.relu(self.fc1(self.emb_f))
         x = F.dropout(x, p=0.5, training=self.training)
+
+        if self.input_heads == 2:
+            p = self.fc_1(torch.tensor(graphs.p, dtype=torch.float))
+            x = torch.concat((x, p), dim=-1)
+
         x = self.fc2(x)
         return x
 
     def mse_loss(self, prediction, target):
-        prediction = prediction.reshape(target.shape)
+        # prediction = prediction.reshape(target.shape)
         result = F.mse_loss(prediction, target)
         return result
 
     def training_step(self, train_batch, batch_idx):
         prediction = self.forward(train_batch)
         loss = self.mse_loss(prediction, train_batch.y)
-        self.log('train_loss', loss, batch_size=64)
+        self.log('train_loss', loss, self.batch_size)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
         prediction = self.forward(val_batch)
         loss = self.mse_loss(prediction, val_batch.y)
-        self.log('val_loss', loss, batch_size=64)
+        self.log('val_loss', loss, batch_size=self.batch_size)
         return {'val_loss': loss}
 
     def test_step(self, test_batch, batch_idx):
         prediction = self.forward(test_batch)
         loss = self.mse_loss(prediction, test_batch.y)
-        self.log('test_loss', loss, batch_size=64)
+        self.log('test_loss', loss, self.batch_size)
         return {'test_loss': loss}
 
     def test_epoch_end(self, outputs):
@@ -101,5 +112,6 @@ class GNN(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
+    
     def get_bottleneck(self):
         return self.emb_f
