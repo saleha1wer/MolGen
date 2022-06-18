@@ -10,13 +10,11 @@ from dataclasses import dataclass
 
 from matplotlib import pyplot as plt
 from torch import nn
-from torch.nn import functional as F, Linear, BatchNorm1d, ModuleList
-from torch.utils import data, ReLU, Sequential
+from torch.nn import functional as F, Linear, BatchNorm1d, ModuleList,  ReLU, Sequential
 from torch_geometric.nn import global_mean_pool, GlobalAttention
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
-
 
 
 class GNN(pl.LightningModule):
@@ -34,7 +32,8 @@ class GNN(pl.LightningModule):
         self.batch_size = config['batch_size']
         dim = self.hidden_size
 
-        self.gnn = self.layer_type(num_features, dim, self.num_layers, norm=torch.nn.BatchNorm1d(dim))
+        # GIN and GraphSAGE do not include edge attr
+        self.gnn = self.layer_type(num_features,  dim, num_layers=self.num_layers, norm=torch.nn.BatchNorm1d(dim))
 
         # self.pool = global_add_pool
         if config['pool'] == 'mean':
@@ -56,8 +55,8 @@ class GNN(pl.LightningModule):
         self.save_hyperparameters()
         self.emb_f = None
 
-    def forward(self, graphs):
-        # what about edge attribute?
+    def forward(self, graphs : Data):
+        # what about edge attribute? - see init
         x, edge_index, batch = graphs.x, graphs.edge_index, graphs.batch
         x = F.relu(self.gnn(x, edge_index))
         self.emb_f = self.pool(x, batch)
