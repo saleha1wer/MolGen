@@ -7,7 +7,6 @@ import time
 import pandas as pd
 import pytorch_lightning as pl
 from dataclasses import dataclass
-
 from matplotlib import pyplot as plt
 from torch import nn
 from torch.nn import functional as F, Linear, BatchNorm1d, ModuleList,  ReLU, Sequential
@@ -34,7 +33,7 @@ class GNN(pl.LightningModule):
 
         # GIN and GraphSAGE do not include edge attr
         self.gnn = self.layer_type(num_features,  dim, num_layers=self.num_layers, norm=torch.nn.BatchNorm1d(dim))
-
+        self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
         # self.pool = global_add_pool
         if config['pool'] == 'mean':
             self.pool = global_mean_pool

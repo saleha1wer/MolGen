@@ -120,10 +120,10 @@ finetune_data_module = GNNDataModule(datamodule_config, f_data_train, f_data_tes
 
 ## Finetuning
 order = 1 
-epochs = 50
-pretrain_epochs = 100
+epochs = 30
+pretrain_epochs = 50
 tag = 'gtot_cosine'
-patience=20
+patience=40
 
 trade_off_backbone =  0.0005  # between 5e-6 and 10
 trade_off_head = 0.1  # between 5e-6 and 1
@@ -137,12 +137,13 @@ val_loader = finetune_data_module.val_dataloader()
 gnn_config = {
     'N': 9,
     'E': 1,
+    'input_heads': 1,
     'lr': 0.002,  # learning rate
     'hidden': 64,  # embedding/hidden dimensions
     'layer_type': GIN,
     'pool': 'GlobalAttention',
-    'n_layers': 5
-    # 'batch_size': tune.choice([16,32,64,128])
+    'n_layers': 5,
+    'batch_size':64
 }
 
 source_model = GNN(gnn_config)
@@ -188,7 +189,7 @@ backbone_regularization = GTOTRegularization(order=order)
 
 head_regularization = L2Regularization(nn.ModuleList([finetuned_model.gnn]))
 
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, patience=6,
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, patience=10,
                                                         verbose=False,
                                                         threshold=0.0001, threshold_mode='rel', cooldown=0,
                                                         min_lr=1e-8,
@@ -197,7 +198,7 @@ save_model_name = 'finetuned_model'
 stopper = EarlyStopping(mode='lower', patience=patience, filename=save_model_name)
 
 
-fname = 'finetuning_runs/finetune'
+fname = 'finetuning_logs'
 print('tensorboard file', fname)
 writer = SummaryWriter(fname)
 training_time = Runtime()
