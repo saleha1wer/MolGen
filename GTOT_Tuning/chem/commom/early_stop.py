@@ -189,14 +189,12 @@ class EarlyStopping(object):
         model : nn.Module
             Model instance.
         '''
-        import copy
-        args2 = copy.deepcopy(model.args)
         # non_load_keys = ['smiles_to_graph', 'pdb_to_graph', 'node_featurizer', 'edge_featurizer',
         #                  'pdb_node_featurizer', 'pdb_edge_featurizer',
         #                  'device', 'batch_size', 'data_path', 'reload']
         # for k in non_load_keys:
         #     del args2[k]
-        torch.save({'model_state_dict': model.state_dict(), 'args': args2}, self.filename)
+        torch.save(model.state_dict(), self.filename+model.name)
 
     def load_checkpoint(self, model):
         '''Load the latest checkpoint

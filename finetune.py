@@ -18,8 +18,9 @@ from GTOT_Tuning.chem.commom.eval import Meter
 from GTOT_Tuning.chem.splitters import scaffold_split, random_split, random_scaffold_split
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
-
+from copy import deepcopy
 criterion = nn.BCEWithLogitsLoss(reduction="none")
+
 def train_epoch(model, device, loader, optimizer, weights_regularization, backbone_regularization,
                 head_regularization, target_getter,
                 source_getter, bss_regularization,trade_off_backbone, trade_off_head, scheduler, epoch):
@@ -28,9 +29,8 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
     loss_epoch = []
     for step, batch in enumerate(tqdm(loader, desc="Iteration", disable=True)):
         batch = batch.to(device)
-        intermediate_output_s, output_s = source_getter(batch.x, batch.edge_index, batch.edge_attr,
-                                                        batch.batch)  # batch.batch is a column vector which maps each node to its respective graph in the batch
-        intermediate_output_t, output_t = target_getter(batch.x, batch.edge_index, batch.edge_attr, batch.batch)
+        intermediate_output_s, output_s = source_getter(batch)
+        intermediate_output_t, output_t = target_getter(batch)
         pred = output_t
         fea_s = source_getter._model.get_bottleneck()
         fea = target_getter._model.get_bottleneck()
@@ -65,14 +65,38 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         optimizer.step()
         loss_epoch.append(cls_loss.item())
     avg_loss = sum(loss_epoch) / len(loss_epoch)
-    if scheduler is not None: scheduler.step()
+    if scheduler is not None: scheduler.step(avg_loss)
     try:
         print('num_oversmooth:', backbone_regularization.num_oversmooth, end=' || ')
         backbone_regularization.num_oversmooth = 0
     except:
         pass
-    metric = np.mean(meter.compute_metric('roc_auc_score_finetune'))
+    metric = np.mean(meter.compute_metric('rmse'))
     return metric, avg_loss
+
+def eval(model, device, loader):
+    model.eval()
+
+    loss_sum = []
+    eval_meter = Meter()
+    for step, batch in enumerate(tqdm(loader, desc="Iteration", disable=True)):
+        batch = batch.to(device)
+
+        with torch.no_grad():
+            pred = model(batch)
+            y = batch.y.view(pred.shape)
+            eval_meter.update(pred, y, mask=y ** 2 > 0)
+            is_valid = y ** 2 > 0
+            # Loss matrix
+            loss_mat = criterion(pred.double(), (y + 1.0) / 2)
+            # loss matrix after removing null target
+            loss_mat = torch.where(is_valid, loss_mat,
+                                   torch.zeros(loss_mat.shape).to(loss_mat.device).to(loss_mat.dtype))
+            cls_loss = torch.sum(loss_mat) / torch.sum(is_valid)
+            loss_sum.append(cls_loss.item())
+    metric = np.mean(eval_meter.compute_metric('rmse'))
+    return metric, sum(loss_sum) / len(loss_sum)
+
 
 dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands')
 
@@ -84,12 +108,6 @@ datamodule_config = {
     'batch_size': 64,
     'num_workers': 0}
 data_module = GNNDataModule(datamodule_config, data_train, data_test)
-trainer = pl.Trainer(max_epochs=100,
-                        accelerator='cpu',
-                        devices=1,
-                        enable_progress_bar=True)
-
-test_data_loader = data_module.test_dataloader()
 
 
 ## Finetuning
@@ -98,27 +116,35 @@ epochs = 30
 tag = 'gtot_cosine'
 patience=20
 
-trade_off_backbone =  1  # between 5e-6 and 1
-trade_off_head = 0.0005  # between 5e-6 and 1
-# fine tuning params^  - can different learning rate for each part of the gnn
+trade_off_backbone =  0.001  # between 5e-6 and 10
+trade_off_head = 0.001  # between 5e-6 and 1
+# fine tuning params^  - can have different learning rate for each part of the gnn
 
 device = torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
-
-
-
-train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
+train_loader = data_module.train_dataloader()
+test_loader = data_module.test_dataloader()
+val_loader = data_module.val_dataloader()
+# train_loader = DataLoader(dataset, batch_size=64, shuffle=True)
 gnn_config = {
     'N': 9,
     'E': 1,
     'lr': 0.002,  # learning rate
     'hidden': 64,  # embedding/hidden dimensions
     'layer_type': GIN,
+    'pool': 'GlobalAttention',
     'n_layers': 3
     # 'batch_size': tune.choice([16,32,64,128])
 }
-finetuned_model = GNN(gnn_config)
-source_model = GNN(gnn_config)
 
+source_model = GNN(gnn_config)
+trainer = pl.Trainer(max_epochs=10,
+                        accelerator='cpu',
+                        devices=1,
+                        enable_progress_bar=True,
+                        enable_checkpointing=True)
+trainer.fit(source_model, data_module)
+
+finetuned_model = deepcopy(source_model)
 finetuned_model.to(device)
 source_model.to(device)
 
@@ -130,7 +156,10 @@ source_model.eval()
 # different learning rate for different part of GNN
 model_param_group = []
 model_param_group.append({"params": finetuned_model.gnn.parameters()})
-model_param_group.append({"params": finetuned_model.fc2.parameters(), "lr": finetuned_model.learning_rate})
+if gnn_config['pool'] == 'GlobalAttention':
+    model_param_group.append({"params": finetuned_model.pool.parameters()})
+model_param_group.append({"params": finetuned_model.fc1.parameters()})
+model_param_group.append({"params": finetuned_model.fc2.parameters()})
 
 optimizer = optim.Adam(model_param_group, lr=finetuned_model.learning_rate)
 # create intermediate layer getter
@@ -166,7 +195,7 @@ writer = SummaryWriter(fname)
 training_time = Runtime()
 test_time = Runtime()
 for epoch in range(1, epochs):
-    print("====epoch " + str(epoch), " lr: ", optimizer.param_groups[-1]['lr'])
+    print("====epoch " + str(epoch))
     training_time.epoch_start()
     train_acc, train_loss = train_epoch(finetuned_model, device, train_loader, optimizer,
                                                             weights_regularization,
@@ -179,17 +208,14 @@ for epoch in range(1, epochs):
     training_time.epoch_end()
 
     print("====Evaluation")
-    exit()
-    val_acc, val_loss = eval(args, model, device, val_loader)
+    val_acc, val_loss = eval(finetuned_model, device, val_loader)
     test_time.epoch_start()
-    test_acc, test_loss = eval(args, model, device, test_loader)
+    test_acc, test_loss = eval(finetuned_model, device, test_loader)
     test_time.epoch_end()
     try:
         scheduler.step(-val_acc)
     except:
         scheduler.step()
-
-
     writer.add_scalar('data/train auc', train_acc, epoch)
     writer.add_scalar('data/val auc', val_acc, epoch)
     writer.add_scalar('data/test auc', test_acc, epoch)
@@ -207,12 +233,10 @@ for epoch in range(1, epochs):
 training_time.print_mean_sum_time(prefix='Training')
 test_time.print_mean_sum_time(prefix='Test')
 
-
 print('tensorboard file is saved in', fname)
 writer.close()
 
-print(stopper.best_test_score, stopper.best_epoch, training_time)
-test_results = trainer.test(finetuned_model, test_data_loader)
+
 
 
 

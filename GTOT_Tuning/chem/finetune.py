@@ -115,7 +115,7 @@ def calculate_channel_attention(dataset, return_layers, args):
             optimizer.step()
 
             # cls_acc = accuracy(outputs, labels)[0]
-            cls_acc = np.mean(train_meter.compute_metric('roc_auc_score_finetune'))
+            cls_acc = np.mean(train_meter.compute_metric('rmse'))
             losses.update(loss.item(), batch.batch.size(0))
             cls_accs.update(cls_acc.item(), batch.batch.size(0))
 

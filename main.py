@@ -62,7 +62,8 @@ def main():
         'lr': tune.loguniform(1e-4, 1e-1),  # learning rate
         'hidden': tune.choice([16,32,64,128,256,512,1024]),  # embedding/hidden dimensions
         'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
-        'n_layers': tune.choice([2,3,4,5,6,7])
+        'n_layers': tune.choice([2,3,4,5,6,7]),
+        'pool': tune.choice(['mean', 'GlobalAttention'])
         # 'batch_size': tune.choice([16,32,64,128])
     }
 
