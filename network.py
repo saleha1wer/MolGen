@@ -10,20 +10,14 @@ from dataclasses import dataclass
 
 from matplotlib import pyplot as plt
 from torch import nn
-from torch.nn import functional as F
-from torch.utils import data
-from torch_geometric.nn import TransformerConv, TopKPooling, global_mean_pool,GlobalAttention
+from torch.nn import functional as F, Linear, BatchNorm1d, ModuleList
+from torch.utils import data, ReLU, Sequential
+from torch_geometric.nn import global_mean_pool, GlobalAttention
 from torch_geometric.nn.conv import GATConv
-from torch_geometric.nn.models import GAT
 from torch_geometric.data import Data
-
-from torch.nn import Linear, BatchNorm1d, ModuleList
-from torch_geometric.nn import TransformerConv, TopKPooling, GIN,MessagePassing
-from torch_geometric.nn import global_mean_pool as gap, global_max_pool as gmp, global_add_pool
-
-from torch_geometric.nn.conv import GINConv, PANConv,GATv2Conv
 from torch_geometric.nn.models import GIN, GAT, PNA
-from torch.nn import ReLU, Sequential
+
+
 
 class GNN(pl.LightningModule):
     def __init__(self, config, data_dir=None, name='GNN'):
