@@ -9,8 +9,8 @@ import pytorch_lightning as pl
 from dataclasses import dataclass
 from matplotlib import pyplot as plt
 from torch import nn
-from torch.nn import functional as F, Linear, BatchNorm1d, ModuleList,  ReLU, Sequential
-from torch_geometric.nn import global_mean_pool, GlobalAttention
+from torch.nn import functional as F, Linear, BatchNorm1d, ModuleList, ReLU, Sequential
+from torch_geometric.nn.glob import GlobalAttention
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
@@ -31,15 +31,24 @@ class GNN(pl.LightningModule):
         self.batch_size = config['batch_size']
         dim = self.hidden_size
 
+<<<<<<< HEAD
         self.gnn = self.layer_type(num_features,  dim, num_layers=self.num_layers, norm=torch.nn.BatchNorm1d(dim))
         self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
         # self.pool = global_add_pool
+=======
+        # GIN and GraphSAGE do not include edge attr
+        self.gnn = self.layer_type(num_features, dim, edge_dim=self.edge_dim, num_layers=self.num_layers,
+                                   norm=torch.nn.BatchNorm1d(dim))
+        #         self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
+>>>>>>> 85811f3a53cab085ea4c665cb3199feccb00f723
         if config['pool'] == 'mean':
             self.pool = global_mean_pool
         elif config['pool'] == 'GlobalAttention':
             self.pool = GlobalAttention(gate_nn=torch.nn.Linear(self.hidden_size, 1))
         else:
             raise ValueError('pool type not supported')
+
+        self.pool = GlobalAttention(gate_nn=torch.nn.Linear(self.hidden_size, 1))
 
         self.fc1 = Linear(dim, dim)
 
@@ -53,7 +62,12 @@ class GNN(pl.LightningModule):
         self.save_hyperparameters()
         self.emb_f = None
 
+<<<<<<< HEAD
     def forward(self, graphs : Data):
+=======
+    def forward(self, graphs: Data):
+        # what about edge attribute? - see init
+>>>>>>> 85811f3a53cab085ea4c665cb3199feccb00f723
         x, edge_index, batch = graphs.x, graphs.edge_index, graphs.batch
         x = F.relu(self.gnn(x, edge_index))
         self.emb_f = self.pool(x, batch)
@@ -61,8 +75,8 @@ class GNN(pl.LightningModule):
         x = F.dropout(x, p=0.5, training=self.training)
 
         if self.input_heads == 2:
-            p = self.fc_1(torch.tensor(graphs.p, dtype=torch.float))
-            x = torch.concat((x, p), dim=-1)
+            p = self.fc_1(graphs.p)
+            x = torch.concat((x, p), dim=-1)  # on PyTorch 1.9 use torch.cat
 
         x = self.fc2(x)
         return x
@@ -102,6 +116,6 @@ class GNN(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         return optimizer
-    
+
     def get_bottleneck(self):
         return self.emb_f
