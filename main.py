@@ -18,6 +18,7 @@ from ray.tune.suggest.bohb import TuneBOHB
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 
 from ray.tune.utils import wait_for_gpu
+from hyperparameter_optimization import hyperparameter_optimization
 
 raytune_callback = TuneReportCheckpointCallback(
     metrics={
@@ -28,7 +29,9 @@ raytune_callback = TuneReportCheckpointCallback(
 
 
 def main():
-    results, elapsed_time = hyperparameter_optimization()
+    results, elapsed_time = hyperparameter_optimization(max_epochs = 3,
+                                                        n_samples = 2)
+    print(f"printing results:{results}")
 
 
 if __name__ == '__main__':
