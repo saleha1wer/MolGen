@@ -61,26 +61,39 @@ def main():
         'n_layers': tune.choice([2, 3, 4, 5, 6, 7]),
         'pool': tune.choice(['mean', 'GlobalAttention']),
         'batch_size': batch_size,
-        'input_heads': 1
+        'input_heads': 1,
+        'active_layer': tune.choice(['first', 'last'])
         # 'batch_size': tune.choice([16,32,64,128])
     }
     ######################################################################################################################
     # HPO on pretrain data (adenosine)
-    best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
-    print('BEST CONFIG: ')
-    print(best_config)
+    # best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
+    # print('BEST CONFIG: ')
+    # print(best_config)
     # Pretrain best config on pretrain data
-    model = GNN(best_config)
+    model = GNN({
+    'N': 5,
+    'E': 1,
+    'lr': 0.00032,  # learning rate
+    'hidden': 64,  # embedding/hidden dimensions
+    # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
+    'layer_type': GIN,
+    'n_layers': 4,
+    'pool': 'mean',
+    'batch_size': 64,
+    'input_heads': 1,
+    'active_layer': 'first'
+    })
     trainer = pl.Trainer(max_epochs=pretrain_epochs,
                                 accelerator='cpu',
                                 devices=1,
                                 enable_progress_bar=True)
     trainer.fit(model, pre_data_module)
-    # torch.save(model.state_dict(), 'pretrain_best_config.pt')
+    torch.save(model.state_dict(), 'pretrain_best_config.pt')
     # model.load_state_dict(torch.load('pretrain_best_config.pt'))
-    # Finetune 
+    # Finetune on a2a data
     source_model = model 
-    finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs,patience=10)
+    finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs,patience=15)
     torch.save(finetuned_model.state_dict(),'final_GNN')
 
 

@@ -44,8 +44,8 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         # Whether y is non-null or not.
         is_valid = y ** 2 > 0
         # Loss matrix
-        # loss_mat = criterion(pred.double(), y) 
-        loss_mat = criterion(pred.double(),(y + 1.0) / 2)
+        loss_mat = criterion(pred.double(), y) 
+        # loss_mat = criterion(pred.double(),(y + 1.0) / 2)
 
         # loss matrix after removing null target
         loss_mat = torch.where(is_valid, loss_mat, torch.zeros(loss_mat.shape).to(loss_mat.device).to(loss_mat.dtype))
@@ -79,7 +79,7 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         backbone_regularization.num_oversmooth = 0
     except:
         pass
-    metric = np.mean((np.array(meter.compute_metric('rmse')))**2)
+    metric = np.mean((meter.compute_metric('rmse')))
     return metric, avg_loss
 
 def eval(model, device, loader):
@@ -96,14 +96,14 @@ def eval(model, device, loader):
             eval_meter.update(pred, y, mask=y ** 2 > 0)
             is_valid = y ** 2 > 0
             # Loss matrix
-            loss_mat = criterion(pred.double(),(y + 1.0) / 2)
-            # loss_mat = criterion(pred.double(),y)
+            # loss_mat = criterion(pred.double(),(y + 1.0) / 2)
+            loss_mat = criterion(pred.double(),y)
             # loss matrix after removing null target
             loss_mat = torch.where(is_valid, loss_mat,
                                    torch.zeros(loss_mat.shape).to(loss_mat.device).to(loss_mat.dtype))
             cls_loss = torch.sum(loss_mat) / torch.sum(is_valid)
             loss_sum.append(cls_loss.item())
-    metric = np.mean(np.array(eval_meter.compute_metric('rmse'))**2)
+    metric = np.mean(eval_meter.compute_metric('rmse'))
     return metric, sum(loss_sum) / len(loss_sum)
 
 def finetune(save_model_name, source_model, data_module, epochs,patience=40,order=1,trade_off_backbone= 0.0005,trade_off_head=0.1):

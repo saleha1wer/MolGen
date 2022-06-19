@@ -101,13 +101,13 @@ datamodule_config = {
 }
 data_module = GNNDataModule(datamodule_config, data_train, data_test)
 gnn_config = {
-    'N': 9,
+    'N': 5,
     'E': 1,
     'lr': 0.00032,  # learning rate
-    'hidden': 256,  # embedding/hidden dimensions
+    'hidden': 64,  # embedding/hidden dimensions
     # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
     'layer_type': GIN,
-    'n_layers': 2,
+    'n_layers': 4,
     'pool': 'mean',
     'batch_size': 64,
     'input_heads': 1
@@ -123,13 +123,14 @@ trainer = pl.Trainer(max_epochs=50,
                         enable_progress_bar=True,
                         enable_checkpointing=True)
 
-test_data_loader = data_module.test_dataloader()
+test_data_loader = data_module.train_dataloader()
 
 test_results = trainer.test(gnn, test_data_loader)
 
-# plot_predvreal(target_values,gnn_y_pred,'GNN-model1')
+
 
 # y_preds = []
+# y_real = []
 # for graph in graphs:
 #     y_pred = gnn(graph)
 #     y_pred = y_pred.detach().numpy()

@@ -89,11 +89,11 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
         x.append(x_map['degree'].index(atom.GetTotalDegree()))
         x.append(x_map['formal_charge'].index(atom.GetFormalCharge()))
         x.append(x_map['num_hs'].index(atom.GetTotalNumHs()))
-        x.append(x_map['num_radical_electrons'].index(
-            atom.GetNumRadicalElectrons()))
-        x.append(x_map['hybridization'].index(str(atom.GetHybridization())))
-        x.append(x_map['is_aromatic'].index(atom.GetIsAromatic()))
-        x.append(x_map['is_in_ring'].index(atom.IsInRing()))
+        # x.append(x_map['num_radical_electrons'].index(
+            # atom.GetNumRadicalElectrons()))
+        # x.append(x_map['hybridization'].index(str(atom.GetHybridization())))
+        # x.append(x_map['is_aromatic'].index(atom.GetIsAromatic()))
+        # x.append(x_map['is_in_ring'].index(atom.IsInRing()))
         xs.append(x)
 
     x = torch.tensor(xs, dtype=torch.float).view(len(xs), -1)  # for some reason, this works with the dataloader? [len(xs), -1]
