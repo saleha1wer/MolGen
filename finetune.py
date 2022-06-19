@@ -20,6 +20,8 @@ from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from copy import deepcopy
 from torch_geometric.nn import GlobalAttention
+from sklearn.metrics import mean_squared_error
+
 
 criterion = nn.MSELoss(reduction="mean")
 
@@ -42,10 +44,13 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         # Whether y is non-null or not.
         is_valid = y ** 2 > 0
         # Loss matrix
-        loss_mat = criterion(pred.double(), (y + 1) / 2)
+        # loss_mat = criterion(pred.double(), y) 
+        loss_mat = criterion(pred.double(),(y + 1.0) / 2)
+
         # loss matrix after removing null target
         loss_mat = torch.where(is_valid, loss_mat, torch.zeros(loss_mat.shape).to(loss_mat.device).to(loss_mat.dtype))
         cls_loss = torch.sum(loss_mat) / torch.sum(is_valid)
+
         meter.update(pred, y, mask=is_valid)
         loss_reg_head = head_regularization()
         loss_reg_backbone = 0.0
@@ -74,7 +79,7 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         backbone_regularization.num_oversmooth = 0
     except:
         pass
-    metric = np.mean(meter.compute_metric('rmse'))
+    metric = np.mean((np.array(meter.compute_metric('rmse')))**2)
     return metric, avg_loss
 
 def eval(model, device, loader):
@@ -91,13 +96,14 @@ def eval(model, device, loader):
             eval_meter.update(pred, y, mask=y ** 2 > 0)
             is_valid = y ** 2 > 0
             # Loss matrix
-            loss_mat = criterion(pred.double(), (y + 1.0) / 2)
+            loss_mat = criterion(pred.double(),(y + 1.0) / 2)
+            # loss_mat = criterion(pred.double(),y)
             # loss matrix after removing null target
             loss_mat = torch.where(is_valid, loss_mat,
                                    torch.zeros(loss_mat.shape).to(loss_mat.device).to(loss_mat.dtype))
             cls_loss = torch.sum(loss_mat) / torch.sum(is_valid)
             loss_sum.append(cls_loss.item())
-    metric = np.mean(eval_meter.compute_metric('rmse'))
+    metric = np.mean(np.array(eval_meter.compute_metric('rmse'))**2)
     return metric, sum(loss_sum) / len(loss_sum)
 
 def finetune(save_model_name, source_model, data_module, epochs,patience=40,order=1,trade_off_backbone= 0.0005,trade_off_head=0.1):
@@ -131,7 +137,6 @@ def finetune(save_model_name, source_model, data_module, epochs,patience=40,orde
     # get the output feature map of the mediate layer in full model
     source_getter = IntermediateLayerGetter(source_model, return_layers=return_layers)
     target_getter = IntermediateLayerGetter(finetuned_model, return_layers=return_layers)
-
     # get regularization for finetune
     weights_regularization = FrobeniusRegularization(source_model.gnn, finetuned_model.gnn)
     backbone_regularization = lambda x: x
@@ -196,6 +201,7 @@ def finetune(save_model_name, source_model, data_module, epochs,patience=40,orde
 
     print('tensorboard file is saved in', fname)
     writer.close()
+    return finetuned_model
 
 
 

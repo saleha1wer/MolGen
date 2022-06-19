@@ -1,6 +1,18 @@
 # perhaps include script for ROC file, etc
 import matplotlib.pyplot as plt
 from sklearn import metrics
+from sklearn.tree import export_text
+import torch 
+import pandas as pd
+from network import GNN
+import numpy as np
+from utils.from_smiles import from_smiles
+from torch_geometric.nn.models import GIN
+from data_module import MoleculeDataset,GNNDataModule
+import os
+import pytorch_lightning as pl
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 
 def plot_train_and_val_using_mpl(train_loss, val_loss, name=None, save=False):
     """
@@ -53,3 +65,75 @@ def plot_roc(y_true,y_preds,labels):
     plt.savefig('images/roc_curve')
     plt.show()
 
+def plot_predvreal(y_true,y_pred,name):
+    assert(len(y_true)==len(y_pred))
+    ax = plt.scatter(y_true, y_pred, c='crimson',s=2)
+    # plt.axline([0, 0], [1, 1])
+    plt.xlabel('True Values', fontsize=15)
+    plt.ylabel('Predictions', fontsize=15)
+    plt.ylim(bottom=0, top=12)
+    plt.xlim(left=0, right=12)
+
+    plt.savefig('images/true_v_pred_'+name)
+    
+    plt.show()
+
+
+df = pd.read_csv('data/a2aar/raw/human_a2aar_ligands',sep=',')
+target_values = df['pchembl_value_Mean'].to_numpy()
+graphs = []  # TUTORIAL METHOD (JOHN BRADSHAW)
+for smiles in df['SMILES']:
+    obj = from_smiles(smiles)
+    graphs.append(obj)
+
+
+dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',prot_target_encoding=None)
+all_train = []
+all_test = []
+
+train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.8, random_state=0)
+data_train = dataset[train_indices.tolist()]
+data_test = dataset[test_indices.tolist()]
+
+datamodule_config = {
+    'batch_size': 64,
+    'num_workers': 0
+}
+data_module = GNNDataModule(datamodule_config, data_train, data_test)
+gnn_config = {
+    'N': 9,
+    'E': 1,
+    'lr': 0.00032,  # learning rate
+    'hidden': 256,  # embedding/hidden dimensions
+    # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
+    'layer_type': GIN,
+    'n_layers': 2,
+    'pool': 'mean',
+    'batch_size': 64,
+    'input_heads': 1
+    # 'batch_size': tune.choice([16,32,64,128])
+}
+
+gnn = GNN(gnn_config)
+gnn.load_state_dict(torch.load('final_GNN'))
+
+trainer = pl.Trainer(max_epochs=50,
+                        accelerator='cpu',
+                        devices=1,
+                        enable_progress_bar=True,
+                        enable_checkpointing=True)
+
+test_data_loader = data_module.test_dataloader()
+
+test_results = trainer.test(gnn, test_data_loader)
+
+# plot_predvreal(target_values,gnn_y_pred,'GNN-model1')
+
+# y_preds = []
+# for graph in graphs:
+#     y_pred = gnn(graph)
+#     y_pred = y_pred.detach().numpy()
+#     y_preds.append(y_pred[0][0])
+
+# print(mean_squared_error(target_values,y_preds))
+# plot_predvreal(target_values,y_preds,'GNN-finetuned')

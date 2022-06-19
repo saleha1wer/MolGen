@@ -1,36 +1,25 @@
 import os
 import numpy as np
 import pytorch_lightning as pl
-import optuna
-import time
-from copy import deepcopy
 from sklearn.model_selection import train_test_split
-from functools import partial
-
 from network import GNN
 from data_module import GNNDataModule, MoleculeDataset
-
-from ray import tune
-from ray.tune import CLIReporter
-from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining, HyperBandForBOHB
-from ray.tune.integration.pytorch_lightning import TuneReportCallback, TuneReportCheckpointCallback
-from ray.tune.suggest.optuna import OptunaSearch
-from ray.tune.suggest.bohb import TuneBOHB
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 from ray.tune.utils import wait_for_gpu
 from hpo import run_hpo
 from finetune import finetune
-
+import torch
+from ray import tune
 def main():
-    pretrain_epochs = 100
-    finetune_epochs = 75
+    pretrain_epochs = 150
+    finetune_epochs = 100
 
     adenosine_star = False
-    NUM_NODE_FEATURES = 9
-    NUM_EDGE_FEATURES = 3
-    max_epochs = 200 #hpo param
-    n_samples = 100 #hpo param
-    max_t_per_trial = 1000 #hpo param
+    NUM_NODE_FEATURES = 5
+    NUM_EDGE_FEATURES = 1
+    max_epochs = 150 #hpo param
+    n_samples = 50 #hpo param
+    max_t_per_trial = 500 #hpo param
     batch_size = 64 
     no_a2a = True #use a2a data or not in adenosine set
     no_a2a = '_no_a2a' if no_a2a else ''
@@ -78,7 +67,8 @@ def main():
     ######################################################################################################################
     # HPO on pretrain data (adenosine)
     best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
-    
+    print('BEST CONFIG: ')
+    print(best_config)
     # Pretrain best config on pretrain data
     model = GNN(best_config)
     trainer = pl.Trainer(max_epochs=pretrain_epochs,
@@ -86,10 +76,12 @@ def main():
                                 devices=1,
                                 enable_progress_bar=True)
     trainer.fit(model, pre_data_module)
-
+    # torch.save(model.state_dict(), 'pretrain_best_config.pt')
+    # model.load_state_dict(torch.load('pretrain_best_config.pt'))
     # Finetune 
     source_model = model 
-    finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs)
+    finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs,patience=10)
+    torch.save(finetuned_model.state_dict(),'final_GNN')
 
 
 
