@@ -145,9 +145,11 @@ def hyperparameter_optimization(adenosine_star = False,
                          enable_checkpointing=True,
                          callbacks=[raytune_callback])
 
-    test_data_loader = data_module.test_dataloader()
+    #test_data_loader = data_module.test_dataloader()
 
-    test_results = trainer.test(best_config_model, test_data_loader)
+    trainer.fit(best_config_model, data_module)
+    test_results = trainer.test(best_config_model, data_module)
+    print(test_results)
     end = time.time()
     print(f"Elapsed time:{end - start}")
 
