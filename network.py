@@ -31,7 +31,6 @@ class GNN(pl.LightningModule):
         self.batch_size = config['batch_size']
         dim = self.hidden_size
 
-        # GIN and GraphSAGE do not include edge attr
         self.gnn = self.layer_type(num_features,  dim, num_layers=self.num_layers, norm=torch.nn.BatchNorm1d(dim))
         self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
         # self.pool = global_add_pool
@@ -55,7 +54,6 @@ class GNN(pl.LightningModule):
         self.emb_f = None
 
     def forward(self, graphs : Data):
-        # what about edge attribute? - see init
         x, edge_index, batch = graphs.x, graphs.edge_index, graphs.batch
         x = F.relu(self.gnn(x, edge_index))
         self.emb_f = self.pool(x, batch)
