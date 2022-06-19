@@ -18,7 +18,6 @@ from ray.tune.suggest.optuna import OptunaSearch
 from ray.tune.suggest.bohb import TuneBOHB
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 from ray.tune.utils import wait_for_gpu
-<<<<<<< HEAD
 from hpo import run_hpo
 from finetune import finetune
 
@@ -92,22 +91,6 @@ def main():
     source_model = model 
     finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs)
 
-=======
-from hyperparameter_optimization import hyperparameter_optimization
-
-raytune_callback = TuneReportCheckpointCallback(
-    metrics={
-        'loss': 'val_loss'
-    },
-    filename='checkpoint',
-    on='validation_end')
-
-
-def main():
-    results, elapsed_time = hyperparameter_optimization(max_epochs = 3,
-                                                        n_samples = 2)
-    print(f"printing results:{results}")
->>>>>>> 85811f3a53cab085ea4c665cb3199feccb00f723
 
 
 if __name__ == '__main__':
