@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Small change to network.py">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/finetune.py" beforeDir="false" afterPath="$PROJECT_DIR$/finetune.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hpo.py" beforeDir="false" afterPath="$PROJECT_DIR$/hpo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -404,7 +403,14 @@
       <option name="project" value="LOCAL" />
       <updated>1655722334475</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet.">
+      <created>1655742011079</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1655742011079</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -428,7 +434,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="create empty file to put ligand_processed data" />
     <MESSAGE value="some more comments" />
     <MESSAGE value="main.py update and creating ligand_processed.npy" />
     <MESSAGE value="main.py update - can load graphs objects" />
@@ -453,6 +458,7 @@
     <MESSAGE value="Moved and loaded the hyperparameter_optimization file" />
     <MESSAGE value="Moved finetuning and pretraining hpo to hpo.py as well as adding function to data_module for easy loading of data." />
     <MESSAGE value="Small change to network.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="Small change to network.py" />
+    <MESSAGE value="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet." />
+    <option name="LAST_COMMIT_MESSAGE" value="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet." />
   </component>
 </project>

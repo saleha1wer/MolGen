@@ -43,9 +43,14 @@ def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_tr
                              enable_checkpointing=True,
                              callbacks=[raytune_callback])
         trainer.fit(pretrain_model, pre_data_module)
-        print('marker1')
-        finetuned_model = finetune(save_model_name = 'final_', source_model = pretrain_model, data_module = fine_data_module, epochs=finetune_epochs, patience=10)
-        print('marker2')
+        finetuned_model = finetune(save_model_name = 'final_',
+                                   source_model = pretrain_model,
+                                   data_module = fine_data_module,
+                                   epochs=finetune_epochs,
+                                   patience=config['patience'],
+                                   trade_off_backbone=config['trade_off_backbone'],
+                                   trade_off_head=config['trade_off_head'],
+                                   order=config['order'])
 
     start_time = time.time()
     reporter = CLIReporter(parameter_columns=['learning_rate'],

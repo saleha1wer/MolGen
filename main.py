@@ -12,7 +12,7 @@ import torch
 from ray import tune
 
 def main():
-    pretrain_epochs = 1
+    pretrain_epochs = 2
     finetune_epochs = 2
 
     adenosine_star = False
@@ -46,20 +46,16 @@ def main():
         'accelerator': 'cpu',
         'batch_size': batch_size,
         'input_heads': 1,
-        'active_layer': tune.choice(['first', 'last'])
+        'active_layer': tune.choice(['first', 'last']),
+        'trade_off_backbone': tune.loguniform(1e-5, 10),
+        'trade_off_head': tune.loguniform(1e-5, 1),
+        'order': tune.choice([1, 2, 3, 4]), #is this a good interval?
+        'patience': 10
         # 'batch_size': tune.choice([16,32,64,128])
     }
     pre_data_module, fine_data_module = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
 
     best_configuration = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config)
-
-#    torch.save(model.state_dict(), 'pretrain_best_config.pt')
-    # model.load_state_dict(torch.load('pretrain_best_config.pt'))
-    # Finetune on a2a data
-    # reload the model here? I can't directly return it from the HPO functions
-#    torch.save(finetuned_model.state_dict(),'final_GNN')
-
-
 
 if __name__ == '__main__':
     main()
