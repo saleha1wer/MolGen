@@ -56,6 +56,7 @@ class MoleculeDataset(Dataset):
         if self.prot_target_encoding != None:
             prot_target_encoder = self._target_encoder(self.prot_target_encoding)
         # self.data = self.data.head(400)  # for debugging purposes
+        self.length = self.data.shape[0]
         for index, mol in tqdm(self.data.iterrows(), total=self.data.shape[0]):
             # Featurize molecule into PyG graph object Data
             data = from_smiles(mol['SMILES'])
@@ -116,6 +117,7 @@ class GNNDataModule(pl.LightningDataModule):
         self.prepare_data_per_node = True
         self.batch_size = config['batch_size']
         self.num_workers = config['num_workers']
+        # all_data = data_train + data_test
         data_train, data_val = train_test_split(data_train, test_size=0.1, random_state=0)  # TODO add a randomstate
         self.train_data = data_train
         self.val_data = data_val
@@ -141,3 +143,12 @@ class GNNDataModule(pl.LightningDataModule):
                                      shuffle=False,
                                      num_workers=self.num_workers)
         return test_dataloader
+
+    def all_dataloader(self) -> EVAL_DATALOADERS:
+        train_dev_sets = torch.utils.data.ConcatDataset([self.train_data, self.test_data,self.val_data])
+        all_dataloader = DataLoader(dataset=train_dev_sets,   #make this legnth the length of the dataset
+                                     batch_size=train_dev_sets.__len__(),
+                                     shuffle=False,
+                                     num_workers=self.num_workers)
+        return all_dataloader
+

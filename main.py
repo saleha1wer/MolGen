@@ -11,15 +11,15 @@ from finetune import finetune
 import torch
 from ray import tune
 def main():
-    pretrain_epochs = 150
+    pretrain_epochs = 2
     finetune_epochs = 100
 
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
-    max_epochs = 150 #hpo param
-    n_samples = 50 #hpo param
-    max_t_per_trial = 500 #hpo param
+    max_epochs = 30 #hpo param
+    n_samples = 200 #hpo param
+    max_t_per_trial = 200 #hpo param
     batch_size = 64 
     no_a2a = True #use a2a data or not in adenosine set
     no_a2a = '_no_a2a' if no_a2a else ''
@@ -55,7 +55,7 @@ def main():
         'N': NUM_NODE_FEATURES,
         'E': NUM_EDGE_FEATURES,
         'lr': tune.loguniform(1e-4, 1e-1),  # learning rate
-        'hidden': tune.choice([16, 32, 64, 128, 256, 512, 1024]),  # embedding/hidden dimensions
+        'hidden': tune.choice([16, 32, 64, 128, 256, 512]),  # embedding/hidden dimensions
         # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
         'layer_type': GIN,
         'n_layers': tune.choice([2, 3, 4, 5, 6, 7]),
@@ -70,7 +70,7 @@ def main():
     # best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
     # print('BEST CONFIG: ')
     # print(best_config)
-    # Pretrain best config on pretrain data
+
     model = GNN({
     'N': 5,
     'E': 1,
@@ -84,16 +84,18 @@ def main():
     'input_heads': 1,
     'active_layer': 'first'
     })
+    # Pretrain best config on pretrain data
+    # model = GNN(best_config)
     trainer = pl.Trainer(max_epochs=pretrain_epochs,
                                 accelerator='cpu',
                                 devices=1,
                                 enable_progress_bar=True)
     trainer.fit(model, pre_data_module)
-    torch.save(model.state_dict(), 'pretrain_best_config.pt')
-    # model.load_state_dict(torch.load('pretrain_best_config.pt'))
+    # torch.save(model.state_dict(), 'models/pretrained_{}.pt'.format(best_config))
+    model.load_state_dict(torch.load('pretrain_best_config.pt'))
     # Finetune on a2a data
     source_model = model 
-    finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs,patience=15)
+    finetuned_model = finetune(save_model_name='models/{}_final_'.format('best_config'), source_model=source_model, data_module=fine_data_module,epochs=finetune_epochs,patience=15)
     torch.save(finetuned_model.state_dict(),'final_GNN')
 
 
