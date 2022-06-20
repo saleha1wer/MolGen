@@ -4,10 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use.">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Moved and loaded the hyperparameter_optimization file">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/hyperparameter_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_module.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_module.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetune.py" beforeDir="false" afterPath="$PROJECT_DIR$/finetune.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hpo.py" beforeDir="false" afterPath="$PROJECT_DIR$/hpo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/network.py" beforeDir="false" afterPath="$PROJECT_DIR$/network.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -374,7 +377,21 @@
       <option name="project" value="LOCAL" />
       <updated>1655624564762</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Moved and loaded the hyperparameter_optimization file">
+      <created>1655628241332</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1655628241332</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Moved and loaded the hyperparameter_optimization file">
+      <created>1655628265935</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1655628265935</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -398,7 +415,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="file for storing processed ligand data, formatting may be still be changed in main.py" />
     <MESSAGE value="include try to load processed data" />
     <MESSAGE value="comments for main.py" />
     <MESSAGE value="create empty file to put ligand_processed data" />
@@ -423,6 +439,7 @@
     <MESSAGE value="hyperparameter optimization works. use this for finding optimal values" />
     <MESSAGE value="First fixes done in main.py and network.py. There's an error on line 67 in main.py though." />
     <MESSAGE value="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use." />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use." />
+    <MESSAGE value="Moved and loaded the hyperparameter_optimization file" />
+    <option name="LAST_COMMIT_MESSAGE" value="Moved and loaded the hyperparameter_optimization file" />
   </component>
 </project>

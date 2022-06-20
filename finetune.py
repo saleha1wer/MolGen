@@ -21,7 +21,7 @@ from tqdm import tqdm
 from copy import deepcopy
 from torch_geometric.nn import GlobalAttention
 from sklearn.metrics import mean_squared_error
-
+from ray import tune
 
 criterion = nn.MSELoss(reduction="mean")
 
@@ -175,6 +175,7 @@ def finetune(save_model_name, source_model, data_module, epochs,patience=40,orde
 
         print("====Evaluation")
         val_acc, val_loss = eval(finetuned_model, device, val_loader)
+        tune.report(val_loss = val_loss) #report the validation loss for the underlying tune process during HPO
         test_time.epoch_start()
         test_acc, test_loss = eval(finetuned_model, device, test_loader)
         test_time.epoch_end()

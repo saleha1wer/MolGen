@@ -26,7 +26,7 @@ class GNN(pl.LightningModule):
         num_features = config['N']
         self.edge_dim = config['E']
         self.hidden_size = config['hidden']
-        self.layer_type = config['layer_type']
+        self.layer_type = GIN #config['layer_type']
         self.num_layers = config['n_layers']
         self.batch_size = config['batch_size']
         dim = self.hidden_size
