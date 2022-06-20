@@ -12,15 +12,14 @@ import torch
 from ray import tune
 
 def main():
-    pretrain_epochs = 150
-    finetune_epochs = 100
+    pretrain_epochs = 1
+    finetune_epochs = 2
 
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
-    max_epochs = 150 #hpo param
-    n_samples = 50 #hpo param
-    max_t_per_trial = 500 #hpo param
+    n_samples = 1 #hpo param
+    max_t_per_trial = 2000 #hpo param
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
     no_a2a = '_no_a2a' if no_a2a else ''
@@ -39,12 +38,12 @@ def main():
         'N': NUM_NODE_FEATURES,
         'E': NUM_EDGE_FEATURES,
         'lr': tune.loguniform(1e-4, 1e-1),  # learning rate
-        'hidden': tune.choice([16, 32, 64, 128, 256, 512, 1024]),  # embedding/hidden dimensions
+        'hidden': tune.choice([16, 32, 64, 128, 256, 512]),  # embedding/hidden dimensions
         # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
         'layer_type': GIN,
         'n_layers': tune.choice([2, 3, 4, 5, 6, 7]),
         'pool': tune.choice(['mean', 'GlobalAttention']),
-        'accelerator': 'gpu',
+        'accelerator': 'cpu',
         'batch_size': batch_size,
         'input_heads': 1,
         'active_layer': tune.choice(['first', 'last'])

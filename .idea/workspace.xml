@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Moved and loaded the hyperparameter_optimization file">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Small change to network.py">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_module.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_module.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/finetune.py" beforeDir="false" afterPath="$PROJECT_DIR$/finetune.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/hpo.py" beforeDir="false" afterPath="$PROJECT_DIR$/hpo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -391,7 +390,21 @@
       <option name="project" value="LOCAL" />
       <updated>1655628265935</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="Moved finetuning and pretraining hpo to hpo.py as well as adding function to data_module for easy loading of data.">
+      <created>1655722233721</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1655722233721</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Small change to network.py">
+      <created>1655722334475</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1655722334475</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -415,8 +428,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="include try to load processed data" />
-    <MESSAGE value="comments for main.py" />
     <MESSAGE value="create empty file to put ligand_processed data" />
     <MESSAGE value="some more comments" />
     <MESSAGE value="main.py update and creating ligand_processed.npy" />
@@ -440,6 +451,8 @@
     <MESSAGE value="First fixes done in main.py and network.py. There's an error on line 67 in main.py though." />
     <MESSAGE value="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use." />
     <MESSAGE value="Moved and loaded the hyperparameter_optimization file" />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved and loaded the hyperparameter_optimization file" />
+    <MESSAGE value="Moved finetuning and pretraining hpo to hpo.py as well as adding function to data_module for easy loading of data." />
+    <MESSAGE value="Small change to network.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="Small change to network.py" />
   </component>
 </project>
