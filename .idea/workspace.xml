@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use.">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Added some finetuning parameters to the HPO file to be automatically optimized.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/images/hyperparameter_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/hpo.py" beforeDir="false" afterPath="$PROJECT_DIR$/hpo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -374,7 +374,49 @@
       <option name="project" value="LOCAL" />
       <updated>1655624564762</updated>
     </task>
-    <option name="localTasksCounter" value="34" />
+    <task id="LOCAL-00034" summary="Moved and loaded the hyperparameter_optimization file">
+      <created>1655628241332</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1655628241332</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Moved and loaded the hyperparameter_optimization file">
+      <created>1655628265935</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1655628265935</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Moved finetuning and pretraining hpo to hpo.py as well as adding function to data_module for easy loading of data.">
+      <created>1655722233721</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1655722233721</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Small change to network.py">
+      <created>1655722334475</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1655722334475</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet.">
+      <created>1655742011079</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1655742011079</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Added some finetuning parameters to the HPO file to be automatically optimized.">
+      <created>1655744924892</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1655744924892</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -398,11 +440,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="file for storing processed ligand data, formatting may be still be changed in main.py" />
-    <MESSAGE value="include try to load processed data" />
-    <MESSAGE value="comments for main.py" />
-    <MESSAGE value="create empty file to put ligand_processed data" />
-    <MESSAGE value="some more comments" />
     <MESSAGE value="main.py update and creating ligand_processed.npy" />
     <MESSAGE value="main.py update - can load graphs objects" />
     <MESSAGE value="moving collate_for_graphs to network.py" />
@@ -423,6 +460,11 @@
     <MESSAGE value="hyperparameter optimization works. use this for finding optimal values" />
     <MESSAGE value="First fixes done in main.py and network.py. There's an error on line 67 in main.py though." />
     <MESSAGE value="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use." />
-    <option name="LAST_COMMIT_MESSAGE" value="Moved hyperparameter optimization code to file of the same name to make running easier, see parameter list for how to use." />
+    <MESSAGE value="Moved and loaded the hyperparameter_optimization file" />
+    <MESSAGE value="Moved finetuning and pretraining hpo to hpo.py as well as adding function to data_module for easy loading of data." />
+    <MESSAGE value="Small change to network.py" />
+    <MESSAGE value="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet." />
+    <MESSAGE value="Added some finetuning parameters to the HPO file to be automatically optimized." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added some finetuning parameters to the HPO file to be automatically optimized." />
   </component>
 </project>

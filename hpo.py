@@ -18,20 +18,84 @@ from ray.tune.suggest.optuna import OptunaSearch
 from ray.tune.suggest.bohb import TuneBOHB
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 from ray.tune.utils import wait_for_gpu
+from finetune import finetune
 
+raytune_callback = TuneReportCheckpointCallback(
+    metrics={
+        'loss': 'val_loss'
+    },
+    filename='checkpoint',
+    on='validation_end')
 
-def run_hpo(max_epochs, n_samples, max_t_per_trial, data_module,gnn_config):
-    raytune_callback = TuneReportCheckpointCallback(
-        metrics={
-            'loss': 'val_loss'
-        },
-        filename='checkpoint',
-        on='validation_end')
+#this function makes a custom logging directory name since the normal way (concat all ...
+# the parameters) makes the name too long for windows and it errors on creation of the logging dir
+def trial_name_generator(trial):
+    namestring = str(trial.config['N'])+str(trial.config['E'])+str(trial.config['hidden'])+str(trial.config['n_layers'])+str(trial.trial_id)
+    return namestring
 
-    def train_tune(config, checkpoint_dir=None):
+def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config):
+    def train_tune(config):
+        pretrain_model = GNN(config)
+        trainer = pl.Trainer(max_epochs=pretrain_epochs,
+                             accelerator = config['accelerator'],
+                             devices=1,
+                             enable_progress_bar=True,
+                             enable_checkpointing=True,
+                             callbacks=[raytune_callback])
+        trainer.fit(pretrain_model, pre_data_module)
+        finetuned_model = finetune(save_model_name = 'final_',
+                                   source_model = pretrain_model,
+                                   data_module = fine_data_module,
+                                   epochs=finetune_epochs,
+                                   patience=config['patience'],
+                                   trade_off_backbone=config['trade_off_backbone'],
+                                   trade_off_head=config['trade_off_head'],
+                                   order=config['order'])
+
+    start_time = time.time()
+    reporter = CLIReporter(parameter_columns=['learning_rate'],
+                           metric_columns=['loss', 'training_iteration']
+                           )
+
+    bohb_scheduler = HyperBandForBOHB(
+        time_attr='time_total_s',
+        max_t=max_t_per_trial,
+        metric='loss',
+        mode='min'
+    )
+
+    bohb_search_alg = TuneBOHB(
+        metric='loss',
+        mode='min'
+    )
+    analysis = tune.run(partial(train_tune),
+                        config=gnn_config,
+                        num_samples=n_samples,  # number of samples taken in the entire sample space
+                        search_alg=bohb_search_alg,
+                        scheduler=bohb_scheduler,
+                        local_dir=os.getcwd(),
+                        trial_dirname_creator=trial_name_generator)
+#                        resources_per_trial={
+#                            gnn_config['accelerator'] : 1
+#                            # 'memory'    :   10 * 1024 * 1024 * 1024
+#                        })
+
+    print('Finished hyperparameter optimization.')
+    best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
+    best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')
+
+    print(f"Best trial configuration:{best_trial.config}")
+    print(f"Best trial final validation loss:{best_trial.last_result['loss']}")
+
+    end_time = time.time()
+    print(f"Elapsed time:{end_time - start_time}")
+    return best_configuration, best_trial.last_result['loss']
+
+def run_hpo_basic(max_epochs, n_samples, max_t_per_trial, data_module, gnn_config):
+    def train_tune(config):
         model = GNN(config)
         trainer = pl.Trainer(max_epochs=max_epochs,
-                                accelerator='cpu',
+                                accelerator=gnn_config['accelerator'],
                                 devices=1,
                                 enable_progress_bar=True,
                                 enable_checkpointing=True,
@@ -56,11 +120,6 @@ def run_hpo(max_epochs, n_samples, max_t_per_trial, data_module,gnn_config):
         mode='min'
     )
 
-    optuna_search_alg = OptunaSearch(
-        metric='loss',
-        mode='min'
-    )
-
     analysis = tune.run(partial(train_tune),
                         config=gnn_config,
                         num_samples=n_samples,  # number of samples taken in the entire sample space
@@ -68,11 +127,11 @@ def run_hpo(max_epochs, n_samples, max_t_per_trial, data_module,gnn_config):
                         scheduler=bohb_scheduler,
                         local_dir=os.getcwd(),
                         resources_per_trial={
-                            'cpu': 1
+                            gnn_config['accelerator'] : 1
                             # 'memory'    :   10 * 1024 * 1024 * 1024
                         })
 
-    print('Finished with hyperparameter optimization.')
+    print('Finished hyperparameter optimization.')
     best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
     best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')
 
@@ -89,7 +148,7 @@ def run_hpo(max_epochs, n_samples, max_t_per_trial, data_module,gnn_config):
     #    data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     trainer = pl.Trainer(max_epochs=max_epochs,
-                            accelerator='cpu',
+                            accelerator=gnn_config['accelerator'],
                             devices=1,
                             enable_progress_bar=True,
                             enable_checkpointing=True,

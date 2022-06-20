@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import numpy as np
 from tqdm import tqdm
 import torch
 import torch_geometric
@@ -109,16 +110,16 @@ class MoleculeDataset(Dataset):
         return data
 
 
+
 # Dataloader class
 # Source: https://towardsdatascience.com/from-pytorch-to-pytorch-lightning-a-gentle-introduction-b371b7caaf09
 class GNNDataModule(pl.LightningDataModule):
-    def __init__(self, config, data_train, data_test):
+    def __init__(self, config, data_train, data_test, val_size = 0.1):
         super().__init__()
         self.prepare_data_per_node = True
         self.batch_size = config['batch_size']
         self.num_workers = config['num_workers']
-        # all_data = data_train + data_test
-        data_train, data_val = train_test_split(data_train, test_size=0.1, random_state=0)  # TODO add a randomstate
+        data_train, data_val = train_test_split(data_train, test_size=val_size, random_state=0)  # TODO add a randomstate
         self.train_data = data_train
         self.val_data = data_val
         self.test_data = data_test
@@ -152,3 +153,30 @@ class GNNDataModule(pl.LightningDataModule):
                                      num_workers=self.num_workers)
         return all_dataloader
 
+def create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state = 0):
+    no_a2a = '_no_a2a' if no_a2a else ''
+
+    p_dataset = MoleculeDataset(root=os.getcwd() + '/data/adenosine{}'.format(no_a2a), filename='human_adenosine{}_ligands'.format(no_a2a),
+                                prot_target_encoding=None)
+
+    f_dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',
+                                prot_target_encoding=None)
+    all_train = []
+    all_test = []
+    for dataset in [p_dataset, f_dataset]:
+        train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=train_size, random_state=random_state)
+        data_train = dataset[train_indices.tolist()]
+        data_test = dataset[test_indices.tolist()]
+        all_train.append(data_train), all_test.append(data_test)
+    p_data_train = all_train[0]
+    p_data_test = all_test[0]
+    f_data_train = all_train[1]
+    f_data_test = all_test[1]
+
+    datamodule_config = {
+        'batch_size': batch_size,
+        'num_workers': 0
+    }
+    pre_data_module = GNNDataModule(datamodule_config, p_data_train, p_data_test)
+    fine_data_module = GNNDataModule(datamodule_config, f_data_train, f_data_test)
+    return pre_data_module, fine_data_module
