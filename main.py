@@ -10,15 +10,15 @@ from hpo import run_hpo_basic, run_hpo_finetuning
 from finetune import finetune
 import torch
 from ray import tune
+from datetime import datetime
 
 def main():
     pretrain_epochs = 2
     finetune_epochs = 2
-
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
-    n_samples = 1 #hpo param
+    n_samples = 2 #hpo param
     max_t_per_trial = 2000 #hpo param
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
@@ -55,7 +55,12 @@ def main():
     }
     pre_data_module, fine_data_module = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
 
-    best_configuration = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config)
+    best_configuration, best_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config)
+
+    now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    file = open('HPO_results.txt','a')
+    message = f"\nTime of writing: {now_string}\nLoss achieved: {str(best_loss)} \nConfiguration found: {str(best_configuration)}"
+    file.write(message)
 
 if __name__ == '__main__':
     main()

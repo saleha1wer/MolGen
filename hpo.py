@@ -89,7 +89,7 @@ def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_tr
 
     end_time = time.time()
     print(f"Elapsed time:{end_time - start_time}")
-    return best_configuration
+    return best_configuration, best_trial.last_result['loss']
 
 def run_hpo_basic(max_epochs, n_samples, max_t_per_trial, data_module, gnn_config):
     def train_tune(config):
