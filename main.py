@@ -28,9 +28,10 @@ def main():
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
     train_size = 0.8
-    # for prot_target_encoding choose: None or 'one-hot-encoding'
-    # if choosing one-hot-encoding change input_heads in gnn_config
-
+    n_inputs = 1
+    sec_inp = 'prot' # or 'xgb' or 'fps' 
+    include_fps = True if sec_inp == 'fps' else False
+    
     #
     ######################################################################################################################
     # HPO on pretrain data (adenosine)
@@ -49,16 +50,17 @@ def main():
         'pool': tune.choice(['mean', 'GlobalAttention']),
         'accelerator': 'cpu',
         'batch_size': batch_size,
-        'input_heads': 1,
+        'input_heads': n_inputs,
         'active_layer': tune.choice(['first', 'last']),
         'trade_off_backbone': tune.loguniform(1e-5, 10),
         'trade_off_head': tune.loguniform(1e-5, 1),
         'order': tune.choice([1, 2, 3, 4]),  # is this a good interval?
-        'patience': 10
+        'patience': 10,
+        'second_input': sec_inp
         # 'batch_size': tune.choice([16,32,64,128])
     }
     pre_data_module, fine_data_module = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state=0, 
-                                                                                prot_enc='one-hot-encoding',include_fps=False)
+                                                                                prot_enc='one-hot-encoding',include_fps=include_fps)
 
     best_configuration, best_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config)
 
