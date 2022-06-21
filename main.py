@@ -95,6 +95,13 @@ def main():
     message = f"\nTime of writing: {now_string}\nLoss achieved: {str(best_loss)} \nConfiguration found: {str(best_configuration)}"
     file.write(message)
 
+# def main():
+#     best_loss, best_config = meta_hpo_finetuning(pretrain_epochs = 50,
+#                                                  finetune_epochs = 30,
+#                                                  n_samples = 30,
+#                                                  train_size = 0.8)
+#     save_loss_and_config(best_loss, best_config)
+#     print('Completed a pretrain and finetuning HPO run!')
 
 if __name__ == '__main__':
     main()

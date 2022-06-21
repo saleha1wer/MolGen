@@ -424,7 +424,18 @@
       <option name="project" value="LOCAL" />
       <updated>1655749828063</updated>
     </task>
+<<<<<<< HEAD
     <option name="localTasksCounter" value="41" />
+=======
+    <task id="LOCAL-00041" summary="Changed code in main.py to run HPO when we run main.py">
+      <created>1655809921197</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1655809921198</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
+>>>>>>> ef553f090b0835cb5201d88db2519f53cd04a3b7
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -448,7 +459,10 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+<<<<<<< HEAD
     <MESSAGE value="main.py update - can load graphs objects" />
+=======
+>>>>>>> ef553f090b0835cb5201d88db2519f53cd04a3b7
     <MESSAGE value="moving collate_for_graphs to network.py" />
     <MESSAGE value="tryin with pandas dataframe as dataset input to the datalaoder" />
     <MESSAGE value="training network with pd.DataFrame" />
@@ -473,6 +487,11 @@
     <MESSAGE value="Some changes to make the HPO work with pretraining and finetuning. it all works right now but we haven't directly viewed the tensorboard files yet." />
     <MESSAGE value="Added some finetuning parameters to the HPO file to be automatically optimized." />
     <MESSAGE value="Added a basic logging file at the end of the HPO" />
+<<<<<<< HEAD
     <option name="LAST_COMMIT_MESSAGE" value="Added a basic logging file at the end of the HPO" />
+=======
+    <MESSAGE value="Changed code in main.py to run HPO when we run main.py" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changed code in main.py to run HPO when we run main.py" />
+>>>>>>> ef553f090b0835cb5201d88db2519f53cd04a3b7
   </component>
 </project>
