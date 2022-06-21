@@ -18,12 +18,12 @@ def main():
 from datetime import datetime
 
 def main():
-    pretrain_epochs = 50
-    finetune_epochs = 30
+    pretrain_epochs = 100
+    finetune_epochs = 50
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
-    n_samples = 20  # hpo param
+    n_samples = 500  # hpo param
     max_t_per_trial = 2000  # hpo param
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
@@ -75,7 +75,7 @@ def main():
     #          'trade_off_head': 0.0005, 'order': 1, 'patience': 10, 'second_input': 'fps'}
     
     model = GNN(best_configuration)
-    trainer = pl.Trainer(max_epochs=50,
+    trainer = pl.Trainer(max_epochs=150,
                                 accelerator='cpu',
                                 devices=1,
                                 enable_progress_bar=True)
@@ -88,14 +88,12 @@ def main():
     finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=50,
                             patience=20, trade_off_backbone=best_configuration['trade_off_backbone'],trade_off_head=best_configuration['trade_off_head'],
                             order=best_configuration['order'])
-    torch.save(finetuned_model.state_dict(),'models/final_GNN_two_inputs_{}'.format(best_configuration['second_input']))
-    best_configuration, best_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,
-                                                       pre_data_module, fine_data_module, gnn_config)
+    if n_inputs >1:
+        torch.save(finetuned_model.state_dict(),'models/final_GNN_two_inputs_{}'.format(best_configuration['second_input']))
+    else:
+        torch.save(finetuned_model.state_dict(),'models/final_GNN_one_input')
 
-    now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    file = open('HPO_results.txt', 'a')
-    message = f"\nTime of writing: {now_string}\nLoss achieved: {str(best_loss)} \nConfiguration found: {str(best_configuration)}"
-    file.write(message)
+
 
 # def main():
 #     best_loss, best_config = meta_hpo_finetuning(pretrain_epochs = 50,

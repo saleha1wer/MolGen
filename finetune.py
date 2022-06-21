@@ -22,6 +22,7 @@ from copy import deepcopy
 from torch_geometric.nn import GlobalAttention
 from sklearn.metrics import mean_squared_error
 from ray import tune
+import shutil
 
 criterion = nn.MSELoss(reduction="mean")
 
@@ -155,6 +156,9 @@ def finetune(save_model_name, source_model, data_module, epochs,patience=40,orde
 
 
     fname = 'finetuning_logs' # delete file if already exists
+    if os.path.exists(fname):
+        shutil.rmtree(fname)
+        print("removed the existing tensorboard file.")
     print('tensorboard file', fname)
     writer = SummaryWriter(fname)
     training_time = Runtime()
