@@ -26,7 +26,6 @@ def main():
     max_t_per_trial = 2000 #hpo param
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
-    no_a2a = '_no_a2a' if no_a2a else ''
     train_size = 0.8
     # for prot_target_encoding choose: None or 'one-hot-encoding'
     # if choosing one-hot-encoding change input_heads in gnn_config
@@ -57,36 +56,36 @@ def main():
         'patience': 10
         # 'batch_size': tune.choice([16,32,64,128])
     }
-    pre_data_module, fine_data_module = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
+    pre_data_module, fine_data_module = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state=0, 
+                                                                                prot_enc='one-hot-encoding',include_fps=False)
 
-    # best_configuration, best_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config)
+    best_configuration, best_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config)
 
     now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    # file = open('HPO_results.txt','a')
-    # message = f"\nTime of writing: {now_string}\nLoss achieved: {str(best_loss)} \nConfiguration found: {str(best_configuration)}"
-    # file.write(message)
+    file = open('HPO_results.txt','a')
+    message = f"\nTime of writing: {now_string}\nLoss achieved: {str(best_loss)} \nConfiguration found: {str(best_configuration)}"
+    file.write(message)
     
-    config =  {'N': 5, 'E': 1, 'lr': 0.00016542323876234363, 'hidden': 256, 
-            'layer_type': GIN,'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu', 
-            'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 8.141935107421304e-05,
-             'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10}
-    model = GNN(config)
-    # model = GNN(best_configuration)
-    # trainer = pl.Trainer(max_epochs=150,
-    #                             accelerator='cpu',
-    #                             devices=1,
-    #                             enable_progress_bar=True)
-    # trainer.fit(model, pre_data_module)
-    # torch.save(model.state_dict(), 'models/pretrained_best_config.pt')
-    model.load_state_dict(torch.load('models/pretrained_best_config.pt'))
+    # best_configuration =  {'N': 5, 'E': 1, 'lr': 0.00016542323876234363, 'hidden': 256, 
+    #         'layer_type': GIN,'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu', 
+    #         'batch_size': 64, 'input_heads': 2, 'active_layer': 'first', 'trade_off_backbone': 0.1,
+    #          'trade_off_head': 0.0005, 'order': 1, 'patience': 10, 'second_input': 'fps'}
+    
+    model = GNN(best_configuration)
+    trainer = pl.Trainer(max_epochs=50,
+                                accelerator='cpu',
+                                devices=1,
+                                enable_progress_bar=True)
+    trainer.fit(model, pre_data_module)
+    torch.save(model.state_dict(), 'models/pretrained_twoinputs_{}.pt',format(best_configuration['second_input']))
+    # model.load_state_dict(torch.load('models/final_GNN_two_inputs_fps'))
     # Finetune 
     # Finetune on a2a data
     source_model = model 
-    finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=100,
-                            patience=20, trade_off_backbone=config['trade_off_backbone'],trade_off_head=config['trade_off_head'],
-                            order=config['order'])
-    torch.save(finetuned_model.state_dict(),'models/final_GNN')
-
+    finetuned_model = finetune(save_model_name='final_', source_model=source_model, data_module=fine_data_module,epochs=50,
+                            patience=20, trade_off_backbone=best_configuration['trade_off_backbone'],trade_off_head=best_configuration['trade_off_head'],
+                            order=best_configuration['order'])
+    torch.save(finetuned_model.state_dict(),'models/final_GNN_two_inputs_{}'.format(best_configuration['second_input']))
 
 if __name__ == '__main__':
     main()

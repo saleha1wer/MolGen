@@ -87,11 +87,11 @@ df = pd.read_csv('data/a2aar/raw/human_a2aar_ligands',sep=',')
 #     graphs.append(obj)
 
 
-dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',prot_target_encoding=None)
+dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',prot_target_encoding='one-hot-encoding')
 all_train = []
 all_test = []
 
-train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.8, random_state=0)
+train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.9, random_state=0)
 data_train = dataset[train_indices.tolist()]
 data_test = dataset[test_indices.tolist()]
 
@@ -101,12 +101,12 @@ datamodule_config = {
 }
 data_module = GNNDataModule(datamodule_config, data_train, data_test)
 gnn_config = {'N': 5, 'E': 1, 'lr': 0.00016542323876234363, 'hidden': 256, 
-            'layer_type': GIN,'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu', 
-            'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 8.141935107421304e-05,
-             'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10}
+        'layer_type': GIN,'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu', 
+        'batch_size': 64, 'input_heads': 2, 'active_layer': 'first', 'trade_off_backbone': 8.141935107421304e-05,
+            'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10,'second_input':'fps'}
 
 gnn = GNN(gnn_config)
-gnn.load_state_dict(torch.load('models/final_GNN'))
+gnn.load_state_dict(torch.load('models/fps_input_nofinetune'))
 
 trainer = pl.Trainer(max_epochs=50,
                         accelerator='cpu',
@@ -118,7 +118,7 @@ trainer = pl.Trainer(max_epochs=50,
 # predictions = trainer.predict(gnn, all_data_loader)
 
 test_data_loader = data_module.test_dataloader()
-res = trainer.rest(gnn, test_data_loader)
+res = trainer.test(gnn, test_data_loader)
 
 # sets = all_data_loader.dataset.datasets
 # target_values = [d.y.numpy()[0][0] for d in sets[0]]
