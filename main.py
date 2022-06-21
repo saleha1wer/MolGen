@@ -11,14 +11,17 @@ from finetune import finetune
 import torch
 from ray import tune
 from datetime import datetime
+import ray
+
 
 def main():
-    pretrain_epochs = 2
-    finetune_epochs = 2
+    ray.init(_memory = 3*1024*1024*1024)
+    pretrain_epochs = 50
+    finetune_epochs = 30
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
-    n_samples = 2 #hpo param
+    n_samples = 30 #hpo param
     max_t_per_trial = 2000 #hpo param
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
@@ -28,7 +31,7 @@ def main():
     # if choosing one-hot-encoding change input_heads in gnn_config
 
     #
-    ######################################################################################################################
+    ######################################################################################################################p
     # HPO on pretrain data (adenosine)
     # best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
     # print('BEST CONFIG: ')
