@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from rdkit import Chem
 from rdkit.Chem import PandasTools
+from torch import seed
 
 import utils
 from utils.mol2fingerprint import calc_fps
@@ -17,7 +18,7 @@ def canonical_smiles(smi):
 
 def main():
     try:
-        df = pd.read_csv('data/papyrus_ligand')
+        df = pd.read_csv('data/a2aar/raw/human_a2aar_ligands')
         df = df[['SMILES', 'pchembl_value_Mean']]
         df = df.dropna(axis=0)
         df['SMILES'] = df['SMILES'].map(canonical_smiles)
@@ -29,12 +30,14 @@ def main():
         print('Finished calculating fingerprints')
         print(fps.shape)
         print(target_values.shape)
-        X_train, X_test, y_train, y_test = train_test_split(fps, target_values, test_size=0.2)
+        X_train, X_test, y_train, y_test = train_test_split(fps, target_values, test_size=0.1,random_state=0)
         model = XGBRegressor()
         model.fit(X_train, y_train)
         predicted = model.predict(X_test)
         rmse = np.sqrt(mean_squared_error(y_test, predicted))
         print(f"RMSE = {rmse}")
+        model.save_model('temp_xgb.json')
+        print('HI')
         # params = {'max_depth': [3],
         #             'learning_rate': [0.01],
         #             'n_estimators': [100],
@@ -49,6 +52,7 @@ def main():
         joblib.dump(regrs, 'model_result_big.pkl')
         print("Best parameters:", regrs.best_params_)
         print("Lowest MSE: ", (-regrs.best_score_))
+        xgbr.save_model('xgb.json')
         #print("Lowest RMSE: ", (-regrs.best_score_))
     except Exception as e:
         print('Could not load data. \nProcessing data.', e)

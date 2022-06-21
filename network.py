@@ -14,8 +14,21 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
+from utils.mol2fingerprint import calc_fps
+from rdkit import Chem
+from xgboost import XGBRegressor
 
 
+def pred_xgb(smiles_list,batch_size=64):
+    model =XGBRegressor()
+    model.load_model('temp_xgb.json')
+    mols = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
+    fps = calc_fps(mols)
+    preds = model.predict(fps)
+    if len(smiles_list) < batch_size:
+        preds = np.concatenate((preds, np.zeros((batch_size-len(smiles_list),))), axis=0)
+    return preds
+        
 class GNN(pl.LightningModule):
     def __init__(self, config, data_dir=None, name='GNN'):
         super(GNN, self).__init__()
@@ -53,8 +66,15 @@ class GNN(pl.LightningModule):
         if self.input_heads == 1:
             self.fc2 = Linear(dim, 1)
 
-        if self.input_heads == 2:
-            self.fc_1 = Linear(4, dim)
+        elif self.input_heads == 2:
+            self.second_input = config['second_input']
+            if self.second_input == 'prot':
+                self.fc_1 = Linear(4, dim)
+
+            elif self.second_input == 'xgb':
+                self.fc_1 = Linear(self.batch_size,dim)
+
+                # self.fc_3 = Linear(self.batch_size +1,self.batch_size)
             self.fc2 = Linear(2 * dim, 1)
 
         self.save_hyperparameters()
@@ -68,10 +88,21 @@ class GNN(pl.LightningModule):
         x = F.dropout(x, p=0.5, training=self.training)
 
         if self.input_heads == 2:
-            p = self.fc_1(graphs.p)
-            x = torch.concat((x, p), dim=-1)  # on PyTorch 1.9 use torch.cat
+            if self.second_input == 'prot':
+                p = self.fc_1(graphs.p)
+                x = torch.concat((x, p), dim=-1)  # on PyTorch 1.9 use torch.ca
+
+            elif self.second_input == 'xgb':
+                p = torch.Tensor(pred_xgb(graphs.smiles, batch_size=self.batch_size))
+                p = self.fc_1(p)
+                # p = torch.reshape(p, (1,p.shape[0]))                
+#                print('x',x.shape)
+                x = torch.cat((x, p), dim=0)
+#                print(x.shape)
+                exit()
 
         x = self.fc2(x)
+#        print('out shape', x.shape)
         return x
 
     def mse_loss(self, prediction, target):
