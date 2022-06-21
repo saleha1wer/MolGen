@@ -33,7 +33,7 @@ def prot_target2array(target_id):
 
 def prot_target2one_hot(target_id):
     category = torch.tensor(ADENOSINE_PROTEIN_IDS[target_id])
-    return F.one_hot(category, 4).to(torch.long).view(1, 4).detach().clone()
+    return F.one_hot(category, 4).to(torch.float).view(1, 4).detach().clone()
 
 
 def prot_target2graph(target_id):

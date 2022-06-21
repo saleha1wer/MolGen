@@ -102,7 +102,6 @@ class GNN(pl.LightningModule):
             elif self.second_input == 'fps':
                 p = graphs.fps.float()
                 p = self.fc_1(p)
-                p = F.dropout(p, p=0.5, training=self.training)
                 x = torch.cat((x, p), dim=1)
 
         x = self.fc2(x)

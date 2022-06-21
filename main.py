@@ -16,14 +16,15 @@ def main():
     finetune_epochs = 100
 
 from datetime import datetime
+
 def main():
     pretrain_epochs = 50
     finetune_epochs = 30
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
-    n_samples = 2 #hpo param
-    max_t_per_trial = 2000 #hpo param
+    n_samples = 20  # hpo param
+    max_t_per_trial = 2000  # hpo param
     batch_size = 64
     no_a2a = True #use a2a data or not in adenosine set
     train_size = 0.8
@@ -52,7 +53,7 @@ def main():
         'active_layer': tune.choice(['first', 'last']),
         'trade_off_backbone': tune.loguniform(1e-5, 10),
         'trade_off_head': tune.loguniform(1e-5, 1),
-        'order': tune.choice([1, 2, 3, 4]), #is this a good interval?
+        'order': tune.choice([1, 2, 3, 4]),  # is this a good interval?
         'patience': 10
         # 'batch_size': tune.choice([16,32,64,128])
     }
@@ -86,6 +87,14 @@ def main():
                             patience=20, trade_off_backbone=best_configuration['trade_off_backbone'],trade_off_head=best_configuration['trade_off_head'],
                             order=best_configuration['order'])
     torch.save(finetuned_model.state_dict(),'models/final_GNN_two_inputs_{}'.format(best_configuration['second_input']))
+    best_configuration, best_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,
+                                                       pre_data_module, fine_data_module, gnn_config)
+
+    now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    file = open('HPO_results.txt', 'a')
+    message = f"\nTime of writing: {now_string}\nLoss achieved: {str(best_loss)} \nConfiguration found: {str(best_configuration)}"
+    file.write(message)
+
 
 if __name__ == '__main__':
     main()

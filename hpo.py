@@ -74,11 +74,12 @@ def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_tr
                         search_alg=bohb_search_alg,
                         scheduler=bohb_scheduler,
                         local_dir=os.getcwd(),
-                        trial_dirname_creator=trial_name_generator)
-#                        resources_per_trial={
-#                            gnn_config['accelerator'] : 1
-#                            # 'memory'    :   10 * 1024 * 1024 * 1024
-#                        })
+                        trial_dirname_creator=trial_name_generator,
+                        #memory=1 * 1024 * 1024 * 1024
+#                                         resources_per_trial={
+# #                            gnn_config['accelerator'] : 1,
+#                             'memory'    :   1 * 1024 * 1024 * 1024
+                        )
 
     print('Finished hyperparameter optimization.')
     best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
