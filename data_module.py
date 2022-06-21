@@ -55,7 +55,9 @@ class MoleculeDataset(Dataset):
     def process(self):
         self.data = pd.read_csv(self.raw_paths[0]).reset_index()
         if self.prot_target_encoding != None:
+
             prot_target_encoder = self._target_encoder(self.prot_target_encoding)
+
         # self.data = self.data.head(400)  # for debugging purposes
         self.length = self.data.shape[0]
         for index, mol in tqdm(self.data.iterrows(), total=self.data.shape[0]):
@@ -119,7 +121,7 @@ class GNNDataModule(pl.LightningDataModule):
         self.prepare_data_per_node = True
         self.batch_size = config['batch_size']
         self.num_workers = config['num_workers']
-        data_train, data_val = train_test_split(data_train, test_size=val_size, random_state=0)  # TODO add a randomstate
+        data_train, data_val = train_test_split(data_train, test_size=val_size, random_state=0) 
         self.train_data = data_train
         self.val_data = data_val
         self.test_data = data_test
@@ -153,14 +155,14 @@ class GNNDataModule(pl.LightningDataModule):
                                      num_workers=self.num_workers)
         return all_dataloader
 
-def create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state = 0):
+def create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state = 0,prot_enc = None):
     no_a2a = '_no_a2a' if no_a2a else ''
 
     p_dataset = MoleculeDataset(root=os.getcwd() + '/data/adenosine{}'.format(no_a2a), filename='human_adenosine{}_ligands'.format(no_a2a),
-                                prot_target_encoding=None)
+                                prot_target_encoding=prot_enc)
 
     f_dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',
-                                prot_target_encoding=None)
+                                prot_target_encoding=prot_enc)
     all_train = []
     all_test = []
     for dataset in [p_dataset, f_dataset]:
