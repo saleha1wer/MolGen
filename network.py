@@ -96,13 +96,13 @@ class GNN(pl.LightningModule):
                 p = torch.Tensor(pred_xgb(graphs.smiles, batch_size=self.batch_size))
                 p = self.fc_1(p)
                 # p = torch.reshape(p, (1,p.shape[0]))                
-                print('x',x.shape)
+#                print('x',x.shape)
                 x = torch.cat((x, p), dim=0)
-                print(x.shape)
+#                print(x.shape)
                 exit()
 
         x = self.fc2(x)
-        print('out shape', x.shape)
+#        print('out shape', x.shape)
         return x
 
     def mse_loss(self, prediction, target):
