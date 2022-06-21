@@ -80,11 +80,11 @@ def plot_predvreal(y_true,y_pred,name):
 
 
 df = pd.read_csv('data/a2aar/raw/human_a2aar_ligands',sep=',')
-target_values = df['pchembl_value_Mean'].to_numpy()
-graphs = []  # TUTORIAL METHOD (JOHN BRADSHAW)
-for smiles in df['SMILES']:
-    obj = from_smiles(smiles)
-    graphs.append(obj)
+# target_values = df['pchembl_value_Mean'].to_numpy()
+# graphs = []  # TUTORIAL METHOD (JOHN BRADSHAW)
+# for smiles in df['SMILES']:
+#     obj = from_smiles(smiles)
+#     graphs.append(obj)
 
 
 dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',prot_target_encoding=None)
@@ -96,26 +96,17 @@ data_train = dataset[train_indices.tolist()]
 data_test = dataset[test_indices.tolist()]
 
 datamodule_config = {
-    'batch_size': 64,
+    'batch_size': 5600,
     'num_workers': 0
 }
 data_module = GNNDataModule(datamodule_config, data_train, data_test)
-gnn_config = {
-    'N': 5,
-    'E': 1,
-    'lr': 0.00032,  # learning rate
-    'hidden': 64,  # embedding/hidden dimensions
-    # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
-    'layer_type': GIN,
-    'n_layers': 4,
-    'pool': 'mean',
-    'batch_size': 64,
-    'input_heads': 1
-    # 'batch_size': tune.choice([16,32,64,128])
-}
+gnn_config = {'N': 5, 'E': 1, 'lr': 0.00016542323876234363, 'hidden': 256, 
+            'layer_type': GIN,'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu', 
+            'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 8.141935107421304e-05,
+             'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10}
 
 gnn = GNN(gnn_config)
-gnn.load_state_dict(torch.load('final_GNN'))
+gnn.load_state_dict(torch.load('models/final_GNN'))
 
 trainer = pl.Trainer(max_epochs=50,
                         accelerator='cpu',
@@ -123,18 +114,28 @@ trainer = pl.Trainer(max_epochs=50,
                         enable_progress_bar=True,
                         enable_checkpointing=True)
 
-test_data_loader = data_module.train_dataloader()
+# all_data_loader = data_module.all_dataloader()
+# predictions = trainer.predict(gnn, all_data_loader)
 
-test_results = trainer.test(gnn, test_data_loader)
+test_data_loader = data_module.test_dataloader()
+res = trainer.rest(gnn, test_data_loader)
 
-
+# sets = all_data_loader.dataset.datasets
+# target_values = [d.y.numpy()[0][0] for d in sets[0]]
+# target_values.extend([d.y.numpy()[0][0] for d in sets[1]])
+# target_values.extend([d.y.numpy()[0][0] for d in sets[2]])
+# print(len(target_values))
+# predictions  =predictions[0].numpy().tolist() 
+# predictions = [i[0] for i in predictions]
+# print(mean_squared_error(target_values,predictions))
 
 # y_preds = []
-# y_real = []
 # for graph in graphs:
 #     y_pred = gnn(graph)
 #     y_pred = y_pred.detach().numpy()
 #     y_preds.append(y_pred[0][0])
 
-# print(mean_squared_error(target_values,y_preds))
-# plot_predvreal(target_values,y_preds,'GNN-finetuned')
+# print(y_preds)
+# print(target_values)
+
+# plot_predvreal(target_values,predictions,'GNN-finetuned')

@@ -154,7 +154,7 @@ def finetune(save_model_name, source_model, data_module, epochs,patience=40,orde
     stopper = EarlyStopping(mode='lower', patience=patience, filename=save_model_name)
 
 
-    fname = 'finetuning_logs'
+    fname = 'finetuning_logs' # delete file if already exists
     print('tensorboard file', fname)
     writer = SummaryWriter(fname)
     training_time = Runtime()
