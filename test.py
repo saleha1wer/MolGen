@@ -1,4 +1,5 @@
 import os
+from tkinter import N
 from flask import Config
 import numpy as np
 import pytorch_lightning as pl
@@ -12,7 +13,7 @@ from finetune import finetune
 import torch
 from ray import tune
 from torch_geometric.data import Data
-
+import multiprocessing as mp   
 import pytorch_lightning as pl
 import torch_geometric.nn.models.attentive_fp
 from dataclasses import dataclass
@@ -26,6 +27,17 @@ from torch_geometric.nn.models import GIN, GAT, PNA, AttentiveFP
 from utils.encode_ligand import calc_fps
 from rdkit import Chem
 from xgboost import XGBRegressor
+
+
+def temp_func(n,e,config,data_module,test_loader):
+    config['N'] = n
+    config['E'] = e
+    model = GNN_edge(config)
+    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=100)
+    trainer.fit(model, data_module)    
+    res = trainer.test(model,test_loader)
+    res = res[0]['test_loss']
+    return [n,e,res]
 
 def main():
     batch_size = 64
@@ -52,20 +64,14 @@ def main():
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
     test_loader = data_module.test_dataloader()
 
-
-    results = []
-    for n_node in parameters['N']:
-        for n_edge in parameters['E']:
-            config['N'] = 2
-            config['E'] = n_edge
-            model = GNN_edge(config)
-            trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=100)
-            trainer.fit(model, data_module)    
-            res = trainer.test(model,test_loader)
-            res = res[0]['test_loss']
-            results.append(res)
-
-
+        
+    n_cores = int(mp.cpu_count())
+    pool = mp.Pool(processes=int(n_cores))
+    results = pool.starmap(temp_func, [(n_node,n_edge,config,data_module,test_loader) for n_node in parameters['N'] for n_edge in parameters['E']])
+    print(results)
+    pool.close()
+    pool.join()
+            
 class GNN_edge(pl.LightningModule):
     def __init__(self, config, data_dir=None, name='GNN'):
         super(GNN_edge, self).__init__()
