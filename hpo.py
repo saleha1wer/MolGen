@@ -75,7 +75,8 @@ def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size,
         'trade_off_backbone': tune.loguniform(1e-4, 1e-2),
         'trade_off_head': tune.loguniform(1e-4, 1e-2),
         'order': tune.choice([1, 2]),  # is this a good interval?
-        'patience': 10
+        'patience': 10,
+        'dropout_rate': tune.uniform(0, 0.6)
         # 'batch_size': tune.choice([16,32,64,128])
     }
     pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
