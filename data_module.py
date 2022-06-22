@@ -155,7 +155,7 @@ class GNNDataModule(pl.LightningDataModule):
                                      num_workers=self.num_workers)
         return all_dataloader
 
-def create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state = 0,prot_enc = None):
+def create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size, random_state = 0, prot_enc = None):
     no_a2a = '_no_a2a' if no_a2a else ''
 
     p_dataset = MoleculeDataset(root=os.getcwd() + '/data/adenosine{}'.format(no_a2a), filename='human_adenosine{}_ligands'.format(no_a2a),

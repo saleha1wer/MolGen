@@ -113,7 +113,7 @@ class GNN(pl.LightningModule):
     def training_step(self, train_batch, batch_idx):
         prediction = self.forward(train_batch)
         loss = self.mse_loss(prediction, train_batch.y)
-        self.log('train_loss', loss, self.batch_size)
+        self.log('train_loss', loss, batch_size=self.batch_size)
         return loss
 
     def validation_step(self, val_batch, batch_idx):
@@ -125,7 +125,7 @@ class GNN(pl.LightningModule):
     def test_step(self, test_batch, batch_idx):
         prediction = self.forward(test_batch)
         loss = self.mse_loss(prediction, test_batch.y)
-        self.log('test_loss', loss, self.batch_size)
+        self.log('test_loss', loss, batch_size=self.batch_size)
         return {'test_loss': loss}
 
     def test_epoch_end(self, outputs):
@@ -135,7 +135,7 @@ class GNN(pl.LightningModule):
 
     def validation_epoch_end(self, outputs):
         avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        self.log('val_loss', avg_loss, self.batch_size)
+        self.log('val_loss', avg_loss, batch_size=self.batch_size)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
