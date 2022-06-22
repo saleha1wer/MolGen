@@ -222,3 +222,8 @@ Loss = 3.6455e-01, PNorm = 78.2186, GNorm = 1.1001, lr_0 = 7.2170e-04
 Loss = 3.3858e-01, PNorm = 78.3346, GNorm = 1.0675, lr_0 = 7.1607e-04
 Loss = 3.1429e-01, PNorm = 78.4371, GNorm = 0.7197, lr_0 = 7.1048e-04
 Loss = 3.6590e-01, PNorm = 78.5187, GNorm = 1.1384, lr_0 = 7.0493e-04
+Validation rmse = 0.822782
+Epoch 7
+Loss = 2.8542e-01, PNorm = 78.6077, GNorm = 0.6233, lr_0 = 6.9942e-04
+Loss = 3.0027e-01, PNorm = 78.7082, GNorm = 0.7698, lr_0 = 6.9396e-04
+Loss = 2.8953e-01, PNorm = 78.7993, GNorm = 1.0566, lr_0 = 6.8854e-04
