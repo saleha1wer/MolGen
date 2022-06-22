@@ -36,7 +36,7 @@ class GNN(pl.LightningModule):
         self.data_dir = data_dir or os.getcwd()  # pass this from now on
         self.input_heads = config['input_heads']
         self.learning_rate = config['lr']
-        num_features = config['N']
+        self.num_features = config['N']
         self.edge_dim = config['E']
         self.hidden_size = config['hidden']
         self.layer_type = config['layer_type']
@@ -45,9 +45,8 @@ class GNN(pl.LightningModule):
         self.dropout_rate = config['dropout_rate']
         dim = self.hidden_size
 
-        # GIN and GraphSAGE do not include edge attr
-        self.gnn = self.layer_type(num_features,dim, num_layers=self.num_layers,
-                                   norm=torch.nn.BatchNorm1d(dim))
+        self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
+                                   heads=8, norm=torch.nn.BatchNorm1d(dim))
         if config['active_layer'] == 'first':
             self.last_layer = self.gnn._modules['convs'][0]
         elif config['active_layer'] == 'last':
@@ -83,8 +82,11 @@ class GNN(pl.LightningModule):
         self.emb_f = None
 
     def forward(self, graphs: Data):
-        x, edge_index, batch = graphs.x, graphs.edge_index, graphs.batch
-        x = F.relu(self.gnn(x, edge_index))
+        x = graphs.x[:, :self.num_features].to(torch.float)
+        edge_attr = graphs.edge_attr[:, :self.edge_dim].to(torch.float)
+        edge_index = graphs.edge_index
+        batch = graphs.batch
+        x = F.relu(self.gnn(x, edge_index, edge_attr))
         self.emb_f = self.pool(x, batch)
         x = F.relu(self.fc1(self.emb_f))
         x = F.dropout(x, p=self.dropout_rate, training=self.training)
