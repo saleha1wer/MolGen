@@ -21,6 +21,9 @@ from ray.tune.utils import wait_for_gpu
 from finetune import finetune
 from datetime import datetime
 
+test_pretraining_epochs = 150
+test_finetuning_epochs = 100
+
 raytune_callback = TuneReportCheckpointCallback(
     metrics={
         'loss': 'val_loss'
@@ -87,9 +90,9 @@ def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size,
 
     return best_val_loss, test_result[0]['test_loss'], best_configuration
 
-def calculate_test_loss(pre_datamodule, finetune_data_module, pretrain_epochs, finetune_epochs, config):
+def calculate_test_loss(pre_datamodule, finetune_data_module, config):
     pretrain_model = GNN(config)
-    trainer = pl.Trainer(max_epochs=pretrain_epochs,
+    trainer = pl.Trainer(max_epochs=test_pretraining_epochs,
                          accelerator=config['accelerator'],
                          devices=1,
                          enable_progress_bar=True,
@@ -99,7 +102,7 @@ def calculate_test_loss(pre_datamodule, finetune_data_module, pretrain_epochs, f
     finetuned_model = finetune(save_model_name='final_',
                                source_model=pretrain_model,
                                data_module=finetune_data_module,
-                               epochs=finetune_epochs,
+                               epochs=test_finetuning_epochs,
                                patience=config['patience'],
                                trade_off_backbone=config['trade_off_backbone'],
                                trade_off_head=config['trade_off_head'],

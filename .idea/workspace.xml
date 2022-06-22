@@ -4,13 +4,50 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Abstracted HPO code in main.py to hpo.py">
+    <list default="true" id="4390a5d9-fb49-4eb9-9777-d932a5d9e9cb" name="Changes" comment="Added logging files for HPO runs">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_module.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_module.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/finetune.py" beforeDir="false" afterPath="$PROJECT_DIR$/finetune.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655647582.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655656981.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655658668.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655658704.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655658844.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655659076.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655659468.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655659886.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655660143.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655660176.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655660199.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655660221.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655660794.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661124.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661171.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661237.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661308.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661351.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661402.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661493.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661574.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661593.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661616.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661654.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661677.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661721.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661730.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661750.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661806.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661813.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655661875.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655662002.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655662033.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655662386.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655662969.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655663291.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655663484.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655663584.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655664388.mrs-mbp-2.home" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/finetuning_logs/events.out.tfevents.1655665437.mrs-mbp-2.home" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/hpo.py" beforeDir="false" afterPath="$PROJECT_DIR$/hpo.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/final_GNN" beforeDir="false" afterPath="$PROJECT_DIR$/models/final_GNN" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -440,7 +477,21 @@
       <option name="project" value="LOCAL" />
       <updated>1655848251808</updated>
     </task>
-    <option name="localTasksCounter" value="43" />
+    <task id="LOCAL-00043" summary="Changed main.py and hpo to make HPO easier to run and also automatically log the result to a small file in HPO_result_logs">
+      <created>1655891741568</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1655891741568</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Added logging files for HPO runs">
+      <created>1655895531668</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1655895531669</updated>
+    </task>
+    <option name="localTasksCounter" value="45" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -464,8 +515,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="tryin with pandas dataframe as dataset input to the datalaoder" />
-    <MESSAGE value="training network with pd.DataFrame" />
     <MESSAGE value="Adding GraphRegressionDataset class, alternative to SmilesRegressionDataset" />
     <MESSAGE value="updated import" />
     <MESSAGE value="matplotlib plotting" />
@@ -489,6 +538,8 @@
     <MESSAGE value="Added a basic logging file at the end of the HPO" />
     <MESSAGE value="Changed code in main.py to run HPO when we run main.py" />
     <MESSAGE value="Abstracted HPO code in main.py to hpo.py" />
-    <option name="LAST_COMMIT_MESSAGE" value="Abstracted HPO code in main.py to hpo.py" />
+    <MESSAGE value="Changed main.py and hpo to make HPO easier to run and also automatically log the result to a small file in HPO_result_logs" />
+    <MESSAGE value="Added logging files for HPO runs" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added logging files for HPO runs" />
   </component>
 </project>
