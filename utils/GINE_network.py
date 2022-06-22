@@ -10,6 +10,7 @@ from torch.nn import Linear, ModuleList
 from torch_geometric.nn.conv import MessagePassing, GINEConv
 from torch_geometric.nn.models import MLP
 from torch_geometric.nn.models.jumping_knowledge import JumpingKnowledge
+from torch_geometric.nn.resolver import activation_resolver
 from torch_geometric.typing import Adj
 
 
