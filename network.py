@@ -14,20 +14,20 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
-from utils.mol2fingerprint import calc_fps
-from rdkit import Chem
-from xgboost import XGBRegressor
+# from utils.mol2fingerprint import calc_fps
+# from rdkit import Chem
+# from xgboost import XGBRegressor
 
 
-def pred_xgb(smiles_list,batch_size=64):
-    model =XGBRegressor()
-    model.load_model('temp_xgb.json')
-    mols = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
-    fps = calc_fps(mols)
-    preds = model.predict(fps)
-    if len(smiles_list) < batch_size:
-        preds = np.concatenate((preds, np.zeros((batch_size-len(smiles_list),))), axis=0)
-    return preds
+# def pred_xgb(smiles_list):
+#     model =XGBRegressor()
+#     model.load_model('temp_xgb.json')
+#     mols = [Chem.MolFromSmiles(smiles) for smiles in smiles_list]
+#     fps = calc_fps(mols)
+#     preds = model.predict(fps)
+#     # if len(smiles_list) < batch_size:
+#         # preds = np.concatenate((preds, np.zeros((batch_size-len(smiles_list),))), axis=0)
+#     return preds
         
 class GNN(pl.LightningModule):
     def __init__(self, config, data_dir=None, name='GNN'):
@@ -72,10 +72,11 @@ class GNN(pl.LightningModule):
                 self.fc_1 = Linear(4, dim)
 
             elif self.second_input == 'xgb':
-                self.fc_1 = Linear(self.batch_size,dim)
+                self.fc_1 = Linear(1,dim)
+            elif self.second_input == 'fps':
+                self.fc_1 = Linear(2067,dim)
 
-                # self.fc_3 = Linear(self.batch_size +1,self.batch_size)
-            self.fc2 = Linear(2 * dim, 1)
+            self.fc2 = Linear(2*dim, 1)
 
         self.save_hyperparameters()
         self.emb_f = None
@@ -93,16 +94,17 @@ class GNN(pl.LightningModule):
                 x = torch.concat((x, p), dim=-1)  # on PyTorch 1.9 use torch.ca
 
             elif self.second_input == 'xgb':
-                p = torch.Tensor(pred_xgb(graphs.smiles, batch_size=self.batch_size))
+                p = graphs.xgb_pred
+                p = p.reshape(p.shape[0],1)
                 p = self.fc_1(p)
-                # p = torch.reshape(p, (1,p.shape[0]))                
-#                print('x',x.shape)
-                x = torch.cat((x, p), dim=0)
-#                print(x.shape)
-                exit()
+                p = F.dropout(p, p=0.5, training=self.training)
+                x = torch.cat((x, p), dim=1)
+            elif self.second_input == 'fps':
+                p = graphs.fps.float()
+                p = self.fc_1(p)
+                x = torch.cat((x, p), dim=1)
 
         x = self.fc2(x)
-#        print('out shape', x.shape)
         return x
 
     def mse_loss(self, prediction, target):

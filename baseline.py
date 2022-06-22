@@ -20,9 +20,8 @@ def main():
     try:
         df = pd.read_csv('data/a2aar/raw/human_a2aar_ligands')
         df = df[['SMILES', 'pchembl_value_Mean']]
-        df = df.dropna(axis=0)
-        df['SMILES'] = df['SMILES'].map(canonical_smiles)
-        df = df.drop_duplicates(subset=['SMILES'])
+        # df = df.dropna(axis=0)
+        # df['SMILES'] = df['SMILES'].map(canonical_smiles)
         PandasTools.AddMoleculeColumnToFrame(df, 'SMILES', 'Molecule', includeFingerprints=False)
         print('Processed Smiles to Mol object')
         target_values = df['pchembl_value_Mean'].to_numpy()
@@ -30,14 +29,15 @@ def main():
         print('Finished calculating fingerprints')
         print(fps.shape)
         print(target_values.shape)
+        # X_train, X_test, y_train, y_test = train_test_split(fps, target_values, test_size=0.5,random_state=0)
         X_train, X_test, y_train, y_test = train_test_split(fps, target_values, test_size=0.1,random_state=0)
         model = XGBRegressor()
         model.fit(X_train, y_train)
         predicted = model.predict(X_test)
         rmse = np.sqrt(mean_squared_error(y_test, predicted))
         print(f"RMSE = {rmse}")
-        model.save_model('temp_xgb.json')
-        print('HI')
+        model.save_model('xgb_models/xgb_a2a.json')
+        exit()
         # params = {'max_depth': [3],
         #             'learning_rate': [0.01],
         #             'n_estimators': [100],
