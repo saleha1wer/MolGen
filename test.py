@@ -23,20 +23,19 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA, AttentiveFP
-from utils.mol2fingerprint import calc_fps
+from utils.encode_ligand import calc_fps
 from rdkit import Chem
 from xgboost import XGBRegressor
 
 def main():
-    
-    batch_size = 128
+    batch_size = 64
     
     parameters = {'N': [1, 4, 5, 7, 8, 9], 'E': [0, 1, 3]}
     
     config = {'N': 5, 'E': 3, 'lr': 0.00016542323876234363, 'hidden': 256,
-              'layer_type': GATConv, 'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu',
-              'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 8.141935107421304e-05,
-              'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10}
+              'layer_type': GATConv, 'n_layers': 3, 'pool': 'mean', 'accelerator': 'cpu',
+              'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 1,
+              'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5}
     
     datamodule_config = {
         'batch_size': batch_size,
@@ -51,15 +50,20 @@ def main():
     data_test = dataset[test_indices.tolist()]
 
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
+    test_loader = data_module.test_dataloader()
 
 
+    results = []
     for n_node in parameters['N']:
         for n_edge in parameters['E']:
-            config['N'] = n_node
+            config['N'] = 2
             config['E'] = n_edge
             model = GNN_edge(config)
-            trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
+            trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=100)
             trainer.fit(model, data_module)    
+            res = trainer.test(model,test_loader)
+            res = res[0]['test_loss']
+            results.append(res)
 
 
 class GNN_edge(pl.LightningModule):
@@ -75,13 +79,14 @@ class GNN_edge(pl.LightningModule):
         self.layer_type = GATConv
         self.num_layers = config['n_layers']
         self.batch_size = config['batch_size']
+        self.dropout_rate = config['dropout_rate']
         self.dim = self.hidden_size
 
         # GIN and GraphSAGE do not include edge attr
         # self.gnn = self.layer_type(num_features,dim, num_layers=self.num_layers, out_channels=1,
         #                            edge_dim=self.edge_dim, num_timesteps=4)
         self.gnn = self.layer_type(self.num_features, self.dim, edge_dim=self.edge_dim,
-                                 dropout=0.5, heads=8)
+                                 dropout=self.dropout_rate, heads=8)
         # if config['active_layer'] == 'first':
         #     self.last_layer = self.gnn._modules['convs'][0]
         # elif config['active_layer'] == 'last':
@@ -118,14 +123,11 @@ class GNN_edge(pl.LightningModule):
     def forward(self, graphs: Data):
         x, edge_index, batch, edge_attr = graphs.x[:,:self.num_features], graphs.edge_index, graphs.batch, \
                                           graphs.edge_attr[:,:self.edge_dim]
-        
-        print(x.shape, edge_index.shape, batch.shape, edge_attr.shape)
         x = F.relu(self.gnn(x, edge_index, edge_attr))
         self.emb_f = self.pool(x, batch)
         x = F.relu(self.fc1(self.emb_f))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, p=self.dropout_rate, training=self.training)
         x = self.fc2(x)
-        print('out shape', x.shape)
         return x
 
     def mse_loss(self, prediction, target):

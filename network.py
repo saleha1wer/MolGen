@@ -42,6 +42,7 @@ class GNN(pl.LightningModule):
         self.layer_type = config['layer_type']
         self.num_layers = config['n_layers']
         self.batch_size = config['batch_size']
+        self.dropout_rate = config['dropout_rate']
         dim = self.hidden_size
 
         # GIN and GraphSAGE do not include edge attr
@@ -86,7 +87,7 @@ class GNN(pl.LightningModule):
         x = F.relu(self.gnn(x, edge_index))
         self.emb_f = self.pool(x, batch)
         x = F.relu(self.fc1(self.emb_f))
-        x = F.dropout(x, p=0.5, training=self.training)
+        x = F.dropout(x, p=self.dropout_rate, training=self.training)
 
         if self.input_heads == 2:
             if self.second_input == 'prot':

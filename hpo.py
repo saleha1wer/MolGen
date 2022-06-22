@@ -75,8 +75,8 @@ def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size,
         'batch_size': batch_size,
         'input_heads': 1,
         'active_layer': 'last',  # tune.choice(['first', 'last']),
-        'trade_off_backbone': tune.loguniform(1e-4, 1e-2),
-        'trade_off_head': tune.loguniform(1e-4, 1e-2),
+        'trade_off_backbone': tune.choice([tune.loguniform(1e-4, 1e-2), tune.loguniform(1, 10)]) ,
+        'trade_off_head':tune.choice([tune.loguniform(1e-5, 1e-1), tune.loguniform(0.5, 1)]),
         'order': tune.choice([1, 2]),  # is this a good interval?
         'patience': 10,
         'dropout_rate': tune.uniform(0, 0.6)

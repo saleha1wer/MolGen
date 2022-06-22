@@ -68,7 +68,8 @@ class MoleculeDataset(Dataset):
 
     def process(self):
         self.data = pd.read_csv(self.raw_paths[0]).reset_index()
-        self.data = add_xgbpred_col(self.data, self.xgb)
+        if self.xgb != None:
+            self.data = add_xgbpred_col(self.data, self.xgb)
         if self.prot_target_encoding != None:
             prot_target_encoder = self._target_encoder(self.prot_target_encoding)
 
@@ -81,7 +82,8 @@ class MoleculeDataset(Dataset):
             data.y = torch.tensor([[mol['pchembl_value_Mean']]])
             if self.prot_target_encoding != None:
                 data.p = prot_target_encoder(mol['target_id'])
-            data.xgb_pred =  torch.tensor(mol['xgb_pred'])
+            if self.xgb != None:
+                data.xgb_pred =  torch.tensor(mol['xgb_pred'])
             if self.include_fps:
                 data.fps = torch.tensor(calc_fps([mol['SMILES']]))
             if self.test:

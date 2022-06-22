@@ -103,7 +103,7 @@ data_module = GNNDataModule(datamodule_config, data_train, data_test)
 gnn_config = {'N': 5, 'E': 1, 'lr': 0.00016542323876234363, 'hidden': 256, 
         'layer_type': GIN,'n_layers': 6, 'pool': 'mean', 'accelerator': 'cpu', 
         'batch_size': 64, 'input_heads': 2, 'active_layer': 'first', 'trade_off_backbone': 8.141935107421304e-05,
-            'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10,'second_input':'fps'}
+            'trade_off_head': 0.12425374868175541, 'order': 1, 'patience': 10,'second_input':'fps', 'dropout_rate':0.5}
 
 gnn = GNN(gnn_config)
 gnn.load_state_dict(torch.load('models/fps_input_nofinetune'))
@@ -119,7 +119,7 @@ trainer = pl.Trainer(max_epochs=50,
 
 test_data_loader = data_module.test_dataloader()
 res = trainer.test(gnn, test_data_loader)
-
+print(res)
 # sets = all_data_loader.dataset.datasets
 # target_values = [d.y.numpy()[0][0] for d in sets[0]]
 # target_values.extend([d.y.numpy()[0][0] for d in sets[1]])
