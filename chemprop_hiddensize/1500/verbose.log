@@ -227,3 +227,24 @@ Epoch 7
 Loss = 2.8542e-01, PNorm = 78.6077, GNorm = 0.6233, lr_0 = 6.9942e-04
 Loss = 3.0027e-01, PNorm = 78.7082, GNorm = 0.7698, lr_0 = 6.9396e-04
 Loss = 2.8953e-01, PNorm = 78.7993, GNorm = 1.0566, lr_0 = 6.8854e-04
+Loss = 2.6091e-01, PNorm = 78.8767, GNorm = 0.7145, lr_0 = 6.8316e-04
+Loss = 3.0552e-01, PNorm = 78.9752, GNorm = 0.9260, lr_0 = 6.7783e-04
+Loss = 3.2487e-01, PNorm = 79.0672, GNorm = 1.8358, lr_0 = 6.7254e-04
+Loss = 3.1514e-01, PNorm = 79.1167, GNorm = 1.7390, lr_0 = 6.6728e-04
+Loss = 3.6503e-01, PNorm = 79.2083, GNorm = 0.8229, lr_0 = 6.6207e-04
+Loss = 3.5001e-01, PNorm = 79.2976, GNorm = 1.2253, lr_0 = 6.5690e-04
+Validation rmse = 0.832207
+Epoch 8
+Loss = 2.8657e-01, PNorm = 79.4334, GNorm = 0.6656, lr_0 = 6.5126e-04
+Loss = 2.6144e-01, PNorm = 79.5383, GNorm = 0.7015, lr_0 = 6.4618e-04
+Loss = 2.9499e-01, PNorm = 79.6194, GNorm = 0.9230, lr_0 = 6.4113e-04
+Loss = 3.4208e-01, PNorm = 79.7513, GNorm = 1.9230, lr_0 = 6.3612e-04
+Loss = 2.7225e-01, PNorm = 79.8234, GNorm = 0.5712, lr_0 = 6.3116e-04
+Loss = 2.8125e-01, PNorm = 79.8945, GNorm = 1.1943, lr_0 = 6.2623e-04
+Loss = 2.9548e-01, PNorm = 79.9630, GNorm = 0.7827, lr_0 = 6.2134e-04
+Loss = 2.8297e-01, PNorm = 80.0197, GNorm = 0.9295, lr_0 = 6.1648e-04
+Loss = 2.6281e-01, PNorm = 80.0782, GNorm = 0.5658, lr_0 = 6.1167e-04
+Validation rmse = 0.784225
+Epoch 9
+Loss = 2.6297e-01, PNorm = 80.1626, GNorm = 0.9945, lr_0 = 6.0689e-04
+Loss = 2.5261e-01, PNorm = 80.2180, GNorm = 0.8588, lr_0 = 6.0215e-04

@@ -15,7 +15,7 @@ import tempfile
 
 
 
-extra_hidden_sizes = [350,750,1500,3000,4000,5000,7500]
+extra_hidden_sizes = [1500,3000,4000,5000,7500]
 
 for size in extra_hidden_sizes:
     path = 'chemprop_hiddensize/'+str(size)
