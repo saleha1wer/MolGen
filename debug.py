@@ -47,7 +47,7 @@ def main():
                                   num_node_features=NUM_NODE_FEATURES, num_edge_features=NUM_EDGE_FEATURES,
                                   prot_target_encoding=None)
 
-    train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.8, random_state=0)
+    train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.9, random_state=0)
 
     data_train = dataset[train_indices.tolist()]
     data_test = dataset[test_indices.tolist()]

@@ -11,20 +11,20 @@ from hpo import run_hpo_basic, run_hpo_finetuning, meta_hpo_finetuning, save_los
 from finetune import finetune
 import torch
 from ray import tune
-def main():
-    pretrain_epochs = 2
-    finetune_epochs = 100
 
 
 def main():
-    best_val_loss, best_test_loss, best_config = meta_hpo_finetuning(pretrain_epochs = 2,
-                                                 finetune_epochs = 2,
-                                                 n_samples = 1,
-                                                 train_size = 0.8,
+    pretrain_epochs = 50
+    finetune_epochs = 30
+    best_val_loss, best_test_loss, best_config = meta_hpo_finetuning(pretrain_epochs = pretrain_epochs,
+                                                 finetune_epochs = finetune_epochs,
+                                                 n_samples = 50,
+                                                 train_size = 0.9,
                                                  report_test_loss = True)
 
     save_loss_and_config(best_val_loss, best_test_loss, best_config)
     print('Completed a pretrain and finetuning HPO run!')
+    
 
 
 if __name__ == '__main__':
