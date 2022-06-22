@@ -32,20 +32,25 @@ from xgboost import XGBRegressor
 def temp_func(n,e,config,data_module,test_loader):
     config['N'] = n
     config['E'] = e
-    model = GNN_edge(config)
-    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=100)
-    trainer.fit(model, data_module)    
-    res = trainer.test(model,test_loader)
-    res = res[0]['test_loss']
-    return [n,e,res]
+    results = []
+    for i in range(3):
+        model = GNN(config)
+        trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=100)
+        trainer.fit(model, data_module)    
+        res = trainer.test(model,test_loader)
+        res = res[0]['test_loss']
+        results.append(res)
+    score = np.mean(results)
+    std = np.std(results)
+    return [n,e,score,std]
 
 def main():
     batch_size = 64
     
     parameters = {'N': [1, 4, 5, 7, 8, 9], 'E': [0, 1, 3]}
     
-    config = {'N': 5, 'E': 3, 'lr': 0.00016542323876234363, 'hidden': 256,
-              'layer_type': GATConv, 'n_layers': 3, 'pool': 'mean', 'accelerator': 'cpu',
+    config = {'N': None, 'E': None, 'lr': 0.0003, 'hidden': 256,
+              'layer_type': GAT, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
               'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 1,
               'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5}
     
@@ -71,111 +76,7 @@ def main():
     print(results)
     pool.close()
     pool.join()
-            
-class GNN_edge(pl.LightningModule):
-    def __init__(self, config, data_dir=None, name='GNN'):
-        super(GNN_edge, self).__init__()
-        self.name = name
-        self.data_dir = data_dir or os.getcwd()  # pass this from now on
-        self.input_heads = config['input_heads']
-        self.learning_rate = config['lr']
-        self.num_features = config['N']
-        self.edge_dim = config['E']
-        self.hidden_size = config['hidden']
-        self.layer_type = GATConv
-        self.num_layers = config['n_layers']
-        self.batch_size = config['batch_size']
-        self.dropout_rate = config['dropout_rate']
-        self.dim = self.hidden_size
 
-        # GIN and GraphSAGE do not include edge attr
-        # self.gnn = self.layer_type(num_features,dim, num_layers=self.num_layers, out_channels=1,
-        #                            edge_dim=self.edge_dim, num_timesteps=4)
-        self.gnn = self.layer_type(self.num_features, self.dim, edge_dim=self.edge_dim,
-                                 dropout=self.dropout_rate, heads=8)
-        # if config['active_layer'] == 'first':
-        #     self.last_layer = self.gnn._modules['convs'][0]
-        # elif config['active_layer'] == 'last':
-        #     self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
-        #
-        if config['pool'] == 'mean':
-            self.pool = global_mean_pool
-        elif config['pool'] == 'GlobalAttention':
-            self.pool = GlobalAttention(gate_nn=torch.nn.Linear(self.hidden_size*8, 1))
-        else:
-            raise ValueError('pool type not supported')
-
-        self.pool = GlobalAttention(gate_nn=torch.nn.Linear(self.hidden_size*8, 1))
-
-        self.fc1 = Linear(8*self.dim, 8*self.dim)
-
-        if self.input_heads == 1:
-            self.fc2 = Linear(self.dim*8, 1)
-
-        # elif self.input_heads == 2:
-        #     self.second_input = config['second_input']
-        #     if self.second_input == 'prot':
-        #         self.fc_1 = Linear(4, dim)
-        #
-        #     elif self.second_input == 'xgb':
-        #         self.fc_1 = Linear(self.batch_size,dim)
-        #
-        #         # self.fc_3 = Linear(self.batch_size +1,self.batch_size)
-        #     self.fc2 = Linear(2 * dim, 1)
-
-        self.save_hyperparameters()
-        self.emb_f = None
-
-    def forward(self, graphs: Data):
-        x, edge_index, batch, edge_attr = graphs.x[:,:self.num_features], graphs.edge_index, graphs.batch, \
-                                          graphs.edge_attr[:,:self.edge_dim]
-        x = F.relu(self.gnn(x, edge_index, edge_attr))
-        self.emb_f = self.pool(x, batch)
-        x = F.relu(self.fc1(self.emb_f))
-        x = F.dropout(x, p=self.dropout_rate, training=self.training)
-        x = self.fc2(x)
-        return x
-
-    def mse_loss(self, prediction, target):
-        # prediction = prediction.reshape(target.shape)c
-        result = F.mse_loss(prediction, target)
-        return result
-
-    def training_step(self, train_batch, batch_idx):
-        prediction = self.forward(train_batch)
-        loss = self.mse_loss(prediction, train_batch.y)
-        self.log('train_loss', loss, self.batch_size)
-        return loss
-
-    def validation_step(self, val_batch, batch_idx):
-        prediction = self.forward(val_batch)
-        loss = self.mse_loss(prediction, val_batch.y)
-        self.log('val_loss', loss, batch_size=self.batch_size)
-        return {'val_loss': loss}
-
-    def test_step(self, test_batch, batch_idx):
-        prediction = self.forward(test_batch)
-        loss = self.mse_loss(prediction, test_batch.y)
-        self.log('test_loss', loss, self.batch_size)
-        return {'test_loss': loss}
-
-    def test_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['test_loss'] for x in outputs]).mean()
-        self.test_results = {'test_loss': avg_loss}
-        return self.test_results
-
-    def validation_epoch_end(self, outputs):
-        avg_loss = torch.stack([x['val_loss'] for x in outputs]).mean()
-        self.log('val_loss', avg_loss, self.batch_size)
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        return optimizer
-
-    def get_bottleneck(self):
-        return self.emb_f
 
 if __name__ == '__main__':
     main()
-
-

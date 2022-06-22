@@ -59,8 +59,6 @@ class GNN(pl.LightningModule):
         else:
             raise ValueError('pool type not supported')
 
-        self.pool = GlobalAttention(gate_nn=torch.nn.Linear(self.hidden_size, 1))
-
         self.fc1 = Linear(dim, dim)
 
         if self.input_heads == 1:
