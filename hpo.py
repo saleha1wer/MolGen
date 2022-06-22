@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 from functools import partial
 
 from network import GNN
-from data_module import GNNDataModule, MoleculeDataset
+from data_module import GNNDataModule, MoleculeDataset, create_pretraining_finetuning_DataModules
 
 from ray import tune
 from ray.tune import CLIReporter
@@ -19,6 +19,7 @@ from ray.tune.suggest.bohb import TuneBOHB
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 from ray.tune.utils import wait_for_gpu
 from finetune import finetune
+from datetime import datetime
 
 raytune_callback = TuneReportCheckpointCallback(
     metrics={
@@ -33,13 +34,14 @@ def trial_name_generator(trial):
     namestring = str(trial.config['N'])+str(trial.config['E'])+str(trial.config['hidden'])+str(trial.config['n_layers'])+str(trial.trial_id)
     return namestring
 
-def save_loss_and_config(loss, configuration):
-    now_string = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-    file = open("HPO_results_logs\\"+now_string+"-HPO_result.txt", 'a')
-    message = f"Loss achieved: {str(loss)} \nConfiguration found: {str(configuration)}"
+def save_loss_and_config(val_loss, test_loss, configuration):
+
+    now_string = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
+    file = open("HPO_result_logs/"+now_string+"-HPO_result.txt", 'w')
+    message = f"Test loss achieved: {str(test_loss)} \nVal loss achieved:{str(val_loss)} \nConfiguration found: {str(configuration)}"
     file.write(message)
 
-def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size):
+def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size, report_test_loss = True):
     adenosine_star = False
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 1
@@ -76,10 +78,34 @@ def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size)
         'patience': 10
         # 'batch_size': tune.choice([16,32,64,128])
     }
-    pre_data_module, fine_data_module = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
+    pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
 
-    return run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,
-                                                       pre_data_module, fine_data_module, gnn_config)
+    best_configuration, best_val_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,
+                                                       pre_datamodule, fine_datamodule, gnn_config)
+    test_result = calculate_test_loss(pre_datamodule, fine_datamodule, pretrain_epochs, finetune_epochs, best_configuration)
+
+    return best_val_loss, test_result[0]['test_loss'], best_configuration
+
+def calculate_test_loss(pre_datamodule, finetune_data_module, pretrain_epochs, finetune_epochs, config):
+    pretrain_model = GNN(config)
+    trainer = pl.Trainer(max_epochs=pretrain_epochs,
+                         accelerator=config['accelerator'],
+                         devices=1,
+                         enable_progress_bar=True,
+                         enable_checkpointing=True,
+                         callbacks=[raytune_callback])
+    trainer.fit(pretrain_model, pre_datamodule)
+    finetuned_model = finetune(save_model_name='final_',
+                               source_model=pretrain_model,
+                               data_module=finetune_data_module,
+                               epochs=finetune_epochs,
+                               patience=config['patience'],
+                               trade_off_backbone=config['trade_off_backbone'],
+                               trade_off_head=config['trade_off_head'],
+                               order=config['order'],
+                               report_to_raytune = False)
+    test_result = trainer.test(finetuned_model, finetune_data_module)
+    return test_result
 
 
 def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config):
@@ -99,7 +125,8 @@ def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_tr
                                    patience=config['patience'],
                                    trade_off_backbone=config['trade_off_backbone'],
                                    trade_off_head=config['trade_off_head'],
-                                   order=config['order'])
+                                   order=config['order'],
+                                   report_to_raytune=True)
 
     start_time = time.time()
     reporter = CLIReporter(parameter_columns=['learning_rate'],

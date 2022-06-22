@@ -92,7 +92,7 @@ class MoleculeDataset(Dataset):
                 torch.save(data,
                            os.path.join(self.processed_dir,
                                         f'data_{index}.pt'))
-        
+
 
     def _target_encoder(self, target_encoding):
         if target_encoding == 'one-hot-encoding':

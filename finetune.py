@@ -107,7 +107,7 @@ def eval(model, device, loader):
     metric = np.mean(eval_meter.compute_metric('rmse'))
     return metric, sum(loss_sum) / len(loss_sum)
 
-def finetune(save_model_name, source_model, data_module, epochs,patience=40,order=1,trade_off_backbone= 0.0005,trade_off_head=0.1):
+def finetune(save_model_name, source_model, data_module, epochs, report_to_raytune, patience=40,order=1,trade_off_backbone= 0.0005,trade_off_head=0.1):
     finetuned_model = deepcopy(source_model)
     device = torch.device('cpu') # torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
     finetuned_model.to(device)
@@ -178,7 +178,8 @@ def finetune(save_model_name, source_model, data_module, epochs,patience=40,orde
 
         print("====Evaluation")
         val_acc, val_loss = eval(finetuned_model, device, val_loader)
-        tune.report(loss = val_loss) #report the validation loss for the underlying tune process during HPO
+        if report_to_raytune:
+            tune.report(loss = val_loss) #report the validation loss for the underlying tune process during HPO
         test_time.epoch_start()
         test_acc, test_loss = eval(finetuned_model, device, test_loader)
         test_time.epoch_end()
