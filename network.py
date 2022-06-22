@@ -14,7 +14,7 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
-# from utils.mol2fingerprint import calc_fps
+# from utils.encode_ligand import calc_fps
 # from rdkit import Chem
 # from xgboost import XGBRegressor
 

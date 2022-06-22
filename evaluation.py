@@ -6,9 +6,9 @@ import torch
 import pandas as pd
 from network import GNN
 import numpy as np
-from utils.from_smiles import from_smiles
+from utils.encode_ligand import from_smiles
 from torch_geometric.nn.models import GIN
-from data_module import MoleculeDataset,GNNDataModule
+from data_module import MoleculeDataset, GNNDataModule
 import os
 import pytorch_lightning as pl
 from sklearn.model_selection import train_test_split

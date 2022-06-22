@@ -10,13 +10,13 @@ from torch_geometric.loader import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
 
-from utils.from_smiles import from_smiles
+from utils.encode_ligand import from_smiles
 from utils.encode_protein import prot_target2array, prot_target2one_hot
 
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
 from rdkit import Chem
-from utils.mol2fingerprint import calc_fps
+from utils.encode_ligand import calc_fps
 print(f"Torch version: {torch.__version__}")
 print(f"Cuda available: {torch.cuda.is_available()}")
 print(f"Torch geometric version: {torch_geometric.__version__}")
