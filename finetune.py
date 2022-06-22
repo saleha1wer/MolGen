@@ -109,7 +109,7 @@ def eval(model, device, loader):
 
 def finetune(save_model_name, source_model, data_module, epochs, report_to_raytune, patience=40,order=1,trade_off_backbone= 0.0005,trade_off_head=0.1):
     finetuned_model = deepcopy(source_model)
-    device = torch.device('cpu') # torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
+    device = torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
     finetuned_model.to(device)
     source_model.to(device)
 

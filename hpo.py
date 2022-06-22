@@ -47,7 +47,7 @@ def save_loss_and_config(val_loss, test_loss, configuration):
 def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size, report_test_loss = True):
     adenosine_star = False
     NUM_NODE_FEATURES = 5
-    NUM_EDGE_FEATURES = 1
+    NUM_EDGE_FEATURES = 3
     max_t_per_trial = 2000  # hpo param
     batch_size = 64
     no_a2a = True  # use a2a data or not in adenosine set
@@ -62,26 +62,12 @@ def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size,
     # print('BEST CONFIG: ')
     # print(best_config)
     # Pretrain best config on pretrain data
-    gnn_config = {
-        'N': NUM_NODE_FEATURES,
-        'E': NUM_EDGE_FEATURES,
-        'lr': tune.loguniform(1e-4, 1e-2),  # learning rate
-        'hidden': tune.choice([128, 256, 512]),  # embedding/hidden dimensions
-        # 'layer_type': tune.choice([GIN, GAT, GraphSAGE]),
-        'layer_type': GIN,
-        'n_layers': tune.choice([2, 4, 6, 8]),
-        'pool': tune.choice(['mean', 'GlobalAttention']),
-        'accelerator': 'cpu',
-        'batch_size': batch_size,
-        'input_heads': 1,
-        'active_layer': 'last',  # tune.choice(['first', 'last']),
-        'trade_off_backbone': tune.choice([tune.loguniform(1e-4, 1e-2), tune.loguniform(1, 10)]) ,
-        'trade_off_head':tune.choice([tune.loguniform(1e-5, 1e-1), tune.loguniform(0.5, 1)]),
-        'order': tune.choice([1, 2]),  # is this a good interval?
-        'patience': 10,
-        'dropout_rate': tune.uniform(0, 0.6)
-        # 'batch_size': tune.choice([16,32,64,128])
-    }
+    gnn_config = {'N': NUM_NODE_FEATURES, 'E': NUM_EDGE_FEATURES, 'lr': tune.loguniform(1e-4, 1e-2), 'hidden': tune.choice([128, 256, 512]),
+              'layer_type': GAT, 'n_layers': tune.choice([2, 4, 6, 8]), 'pool': tune.choice(['mean', 'GlobalAttention']), 'accelerator': 'gpu',
+              'batch_size': batch_size, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': tune.choice([tune.loguniform(1e-4, 1e-2), tune.loguniform(1, 10)]),
+              'trade_off_head':tune.choice([tune.loguniform(1e-5, 1e-1), tune.loguniform(0.5, 1)]), 'order': tune.choice([1, 2]), 'patience': 10, 'dropout_rate':tune.uniform(0, 0.6)}
+    
+    
     pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
 
     best_configuration, best_val_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,

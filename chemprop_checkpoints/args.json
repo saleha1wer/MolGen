@@ -38,7 +38,7 @@
     "dropout": 0.0,
     "empty_cache": false,
     "ensemble_size": 1,
-    "epochs": 30,
+    "epochs": 1,
     "evidential_regularization": 0,
     "explicit_h": false,
     "extra_metrics": [],
@@ -47,7 +47,7 @@
     "features_path": null,
     "features_scaling": true,
     "features_size": null,
-    "ffn_hidden_size": 300,
+    "ffn_hidden_size": 10,
     "ffn_num_layers": 2,
     "final_lr": 0.0001,
     "folds_file": null,
@@ -55,7 +55,7 @@
     "frzn_ffn_layers": 0,
     "gpu": null,
     "grad_clip": null,
-    "hidden_size": 300,
+    "hidden_size": 10,
     "hidden_size_solvent": 300,
     "ignore_columns": null,
     "init_lr": 0.0001,
@@ -89,8 +89,8 @@
     "reaction_mode": "reac_diff",
     "reaction_solvent": false,
     "reproducibility": {
-        "command_line": "python /Users/mrsalwer/miniforge3/bin/chemprop_train --data_path data/a2aar/raw/human_a2aar_ligands --dataset_type regression --save_dir chemprop_checkpoints --smiles_columns SMILES --target_columns pchembl_value_Mean",
-        "time": "Sun Jun 19 15:23:10 2022"
+        "command_line": "python /Users/mrsalwer/miniforge3/bin/chemprop_train --data_path data/a2aar/raw/human_a2aar_ligands --dataset_type regression --smiles_columns SMILES --target_columns pchembl_value_Mean --epochs 1 --hidden_size 10 --save_dir chemprop_checkpoints",
+        "time": "Wed Jun 22 23:34:24 2022"
     },
     "resume_experiment": false,
     "save_dir": "chemprop_checkpoints",

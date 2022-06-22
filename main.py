@@ -14,8 +14,8 @@ from ray import tune
 
 
 def main():
-    pretrain_epochs = 2
-    finetune_epochs = 2
+    pretrain_epochs = 50
+    finetune_epochs = 30
     best_val_loss, best_test_loss, best_config = meta_hpo_finetuning(pretrain_epochs = pretrain_epochs,
                                                  finetune_epochs = finetune_epochs,
                                                  n_samples = 1,
@@ -24,7 +24,7 @@ def main():
 
     save_loss_and_config(best_val_loss, best_test_loss, best_config)
     print('Completed a pretrain and finetuning HPO run!')
-    
+
 
 
 if __name__ == '__main__':
