@@ -14,11 +14,11 @@ from ray import tune
 
 
 def main():
-    pretrain_epochs = 50
-    finetune_epochs = 30
+    pretrain_epochs = 2
+    finetune_epochs = 2
     best_val_loss, best_test_loss, best_config = meta_hpo_finetuning(pretrain_epochs = pretrain_epochs,
                                                  finetune_epochs = finetune_epochs,
-                                                 n_samples = 50,
+                                                 n_samples = 1,
                                                  train_size = 0.9,
                                                  report_test_loss = True)
 
