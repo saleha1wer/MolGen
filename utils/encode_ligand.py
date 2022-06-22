@@ -1,4 +1,3 @@
-
 import torch
 import pandas as pd
 import numpy as np
@@ -13,8 +12,7 @@ from rdkit.Chem.QED import qed
 from rdkit.Chem.GraphDescriptors import BertzCT
 
 
-# ADAPTED FROM PYTORCH-GEOMETRIC.UTILS.FROM_SMILES ---------------------------------------------------------------------
-# SAVING TENSORS AS FLOATS
+# BELOW FROM PYTORCH-GEOMETRIC - UNAVAILABLE IN PACKAGE  ---------------------------------------------------------------
 x_map = {
     'atomic_num':
         list(range(0, 119)),
@@ -108,7 +106,7 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
         x.append(x_map['is_in_ring'].index(atom.IsInRing()))
         xs.append(x)
 
-    x = torch.tensor(xs, dtype=torch.float).view(-1, 9)
+    x = torch.tensor(xs, dtype=torch.long).view(-1, 9)
 
     edge_indices, edge_attrs = [], []
     for bond in mol.GetBonds():
@@ -125,13 +123,14 @@ def from_smiles(smiles: str, with_hydrogen: bool = False,
 
     edge_index = torch.tensor(edge_indices)
     edge_index = edge_index.t().to(torch.long).view(2, -1)
-    edge_attr = torch.tensor(edge_attrs, dtype=torch.float).view(-1, 3)
+    edge_attr = torch.tensor(edge_attrs, dtype=torch.long).view(-1, 3)
 
     if edge_index.numel() > 0:  # Sort indices.
         perm = (edge_index[0] * x.size(0) + edge_index[1]).argsort()
         edge_index, edge_attr = edge_index[:, perm], edge_attr[perm]
 
     return Data(x=x, edge_index=edge_index, edge_attr=edge_attr, smiles=smiles)
+# ABOVE FROM PYTORCH-GEOMETRIC - UNAVAILABLE IN PACKAGE  ---------------------------------------------------------------
 
 
 # BELOW IS FROM DRUGEX -------------------------------------------------------------------------------------------------
