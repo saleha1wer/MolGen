@@ -1,4 +1,4 @@
-# PYTORCH GEOMETRIC CODE - CHANGED GIN MODEL TO HAVE GINECONV LAYERS
+# PYTORCH GEOMETRIC CODE - ADAPTED GIN TO GINE BY USING GINECONV LAYERS INSTEAD OF GINCONV LAYERS
 import copy
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
@@ -174,7 +174,7 @@ class GINE(BasicGNN):
     """
     def init_conv(self, in_channels: int, out_channels: int,
                   **kwargs) -> MessagePassing:
-        mlp = MLP([-1, out_channels, out_channels], batch_norm=True)
+        mlp = MLP([in_channels, out_channels, out_channels], batch_norm=True)
         return GINEConv(mlp, **kwargs)
 
 
