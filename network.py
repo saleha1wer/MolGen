@@ -170,11 +170,11 @@ class GNN_GINE(pl.LightningModule):
 
 
         self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
-                                   heads=8, norm=torch.nn.BatchNorm1d(dim))
+                                   norm=torch.nn.BatchNorm1d(dim))
 
         # self.node_embedding = Linear(in_features=self.num_features, out_features=self.hidden_size)
 
-        self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.hidden_size)
+        self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.num_features)
 
         self.gnn = self.layer_type(in_channels=dim, hidden_channels=dim, num_layers=self.num_layers,
                                    norm=torch.nn.BatchNorm1d(dim))
