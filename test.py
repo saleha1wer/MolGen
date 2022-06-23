@@ -4,13 +4,9 @@ from flask import Config
 import numpy as np
 import pytorch_lightning as pl
 from sklearn.model_selection import train_test_split
-from network import GNN, GNN_GINE
+from network import GNN_GINE
 from data_module import GNNDataModule, MoleculeDataset, create_pretraining_finetuning_DataModules
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
-from ray.tune.utils import wait_for_gpu
-from hpo import run_hpo_basic, run_hpo_finetuning
-from finetune import finetune
-import torch
 from ray import tune
 from torch_geometric.data import Data
 import multiprocessing as mp   
@@ -27,14 +23,14 @@ from torch_geometric.nn.models import GIN, GAT, PNA, AttentiveFP
 from utils.encode_ligand import calc_fps
 from rdkit import Chem
 from xgboost import XGBRegressor
-
+from utils.GINE_network import GINE
 
 def temp_func(n,e,config,data_module,test_loader):
     config['N'] = n
     config['E'] = e
     results = []
     for i in range(3):
-        model = GNN(config)
+        model = GNN_GINE(config)
         trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=100)
         trainer.fit(model, data_module)    
         res = trainer.test(model,test_loader)
@@ -50,9 +46,9 @@ def main():
     parameters = {'N': [1, 4, 5, 7, 8, 9], 'E': [0, 1, 3]}
     
     config = {'N': None, 'E': None, 'lr': 0.0003, 'hidden': 256,
-              'layer_type': GNN_GINE, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
+              'layer_type': GINE, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
               'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 1,
-              'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5}
+              'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5, 'second_input':None}
     
     datamodule_config = {
         'batch_size': batch_size,
