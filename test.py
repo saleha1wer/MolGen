@@ -48,7 +48,7 @@ def main():
     config = {'N': None, 'E': None, 'lr': 0.0003, 'hidden': 256,
               'layer_type': GINE, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
               'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 1,
-              'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5, 'second_input':None}
+              'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5, 'second_input': None}
     
     datamodule_config = {
         'batch_size': batch_size,

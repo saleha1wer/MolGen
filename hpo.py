@@ -235,7 +235,7 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
     #     mode='min'
     # )
     tpe = HyperOptSearch(
-            metric="loss", mode="min")
+            metric="loss", mode="min", n_initial_points=10)
 
     analysis = tune.run(partial(train_tune),
                         config=gnn_config,

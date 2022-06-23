@@ -21,10 +21,10 @@ def main():
     batch_size = 64
     n_inputs = 1
     second_input = 'fps'
-    space =  {'N': 5, 'E': 3, 'lr': tune.loguniform(1e-5, 1e-2), 'hidden': tune.choice([64,128, 256, 512,1024]),
-              'layer_type': GAT, 'n_layers': tune.choice([2,4,6,8,10]), 'pool': tune.choice(['mean', 'GlobalAttention']),
-              'dropout_rate' : tune.choice([0,0.1,0.3,0.5]) , 'accelerator': 'cpu', 'batch_size': 64, 
-              'input_heads': 1, 'active_layer': 'first', 'second_input': None}
+    space = {'N': 9, 'E': 1, 'lr': tune.loguniform(1e-5, 1e-2), 'hidden': tune.choice([64, 128, 256, 512, 1024]),
+             'layer_type': GAT, 'n_layers': tune.choice([2,4,6,8]), 'pool': tune.choice(['mean', 'GlobalAttention']),
+             'dropout_rate' : tune.choice([0,0.1,0.3,0.5]), 'accelerator': 'cpu', 'batch_size': 64,
+             'input_heads': 1, 'active_layer': 'first', 'second_input': None}
     
     best_val_loss,best_test_loss, best_config = meta_hpo_basic(pretrain_epochs,
                                                  n_samples = 50,
