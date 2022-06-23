@@ -4,7 +4,7 @@ from flask import Config
 import numpy as np
 import pytorch_lightning as pl
 from sklearn.model_selection import train_test_split
-from network import GNN
+from network import GNN, GNN_GINE
 from data_module import GNNDataModule, MoleculeDataset, create_pretraining_finetuning_DataModules
 from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 from ray.tune.utils import wait_for_gpu
@@ -50,7 +50,7 @@ def main():
     parameters = {'N': [1, 4, 5, 7, 8, 9], 'E': [0, 1, 3]}
     
     config = {'N': None, 'E': None, 'lr': 0.0003, 'hidden': 256,
-              'layer_type': GAT, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
+              'layer_type': GNN_GINE, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
               'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 1,
               'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5, 'second_input': None}
     
