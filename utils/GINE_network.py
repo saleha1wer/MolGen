@@ -1,5 +1,6 @@
 # PYTORCH GEOMETRIC CODE - CHANGED GIN MODEL TO HAVE GINECONV LAYERS
 import copy
+import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import torch
@@ -10,7 +11,6 @@ from torch.nn import Linear, ModuleList
 from torch_geometric.nn.conv import MessagePassing, GINEConv
 from torch_geometric.nn.models import MLP
 from torch_geometric.nn.models.jumping_knowledge import JumpingKnowledge
-from torch_geometric.nn.resolver import activation_resolver
 from torch_geometric.typing import Adj
 
 
@@ -174,5 +174,65 @@ class GINE(BasicGNN):
     """
     def init_conv(self, in_channels: int, out_channels: int,
                   **kwargs) -> MessagePassing:
-        mlp = MLP([in_channels, out_channels, out_channels], batch_norm=True)
-        return GINConv(mlp, **kwargs)
+        mlp = MLP([-1, out_channels, out_channels], batch_norm=True)
+        return GINEConv(mlp, **kwargs)
+
+
+def normalize_string(s: str) -> str:
+    return s.lower().replace('-', '').replace('_', '').replace(' ', '')
+
+
+def resolver(classes: List[Any], query: Union[Any, str],
+             base_cls: Optional[Any], *args, **kwargs):
+
+    if query is None or not isinstance(query, str):
+        return query
+
+    query_repr = normalize_string(query)
+    base_cls_repr = normalize_string(base_cls.__name__) if base_cls else ''
+    for cls in classes:
+        cls_repr = normalize_string(cls.__name__)
+        if query_repr in [cls_repr, cls_repr.replace(base_cls_repr, '')]:
+            if inspect.isclass(cls):
+                return cls(*args, **kwargs)
+            else:
+                return cls
+
+    return ValueError(f"Could not resolve '{query}' among the choices "
+                      f"{set(cls.__name__ for cls in classes)}")
+
+
+# Activation Resolver #########################################################
+
+
+def swish(x: Tensor) -> Tensor:
+    return x * x.sigmoid()
+
+
+def activation_resolver(query: Union[Any, str] = 'relu', *args, **kwargs):
+    import torch
+    base_cls = torch.nn.Module
+
+    acts = [
+        act for act in vars(torch.nn.modules.activation).values()
+        if isinstance(act, type) and issubclass(act, base_cls)
+    ]
+    acts += [
+        swish,
+    ]
+    return resolver(acts, query, base_cls, *args, **kwargs)
+
+
+# Aggregation Resolver ########################################################
+
+
+def aggregation_resolver(query: Union[Any, str], *args, **kwargs):
+    import torch_geometric.nn.aggr as aggrs
+    base_cls = aggrs.Aggregation
+
+    aggrs = [
+        aggr for aggr in vars(aggrs).values()
+        if isinstance(aggr, type) and issubclass(aggr, base_cls)
+    ]
+    return resolver(aggrs, query, base_cls, *args, **kwargs)
+
