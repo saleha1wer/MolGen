@@ -34,7 +34,7 @@ def add_xgbpred_col(df, model_name):
 
 # https://github.com/deepfindr/gnn-project/blob/main/dataset_featurizer.py
 class MoleculeDataset(Dataset):
-    def __init__(self, root, filename, prot_target_encoding=None, test=False, transform=None, pre_transform=None,xgb=None,include_fps=False):
+    def __init__(self, root, filename, prot_target_encoding=None, test=False, transform=None, pre_transform=None,xgb=None,include_fps=False,pred_xgb_error=False):
         """
         root = Where the dataset should be stored. This folder is split
         into raw_dir (downloaded dataset) and processed_dir (processed data).
@@ -44,6 +44,7 @@ class MoleculeDataset(Dataset):
         self.prot_target_encoding = prot_target_encoding
         self.xgb = xgb
         self.include_fps = include_fps
+        self.pred_xgberror = pred_xgb_error
         super(MoleculeDataset, self).__init__(root, transform, pre_transform)
 
     @property
@@ -86,6 +87,8 @@ class MoleculeDataset(Dataset):
                 data.xgb_pred =  torch.tensor(mol['xgb_pred'])
             if self.include_fps:
                 data.fps = torch.tensor(calc_fps([mol['SMILES']]))
+            if self.pred_xgberror:
+                data.y = data.y - data.xgb_pred 
             if self.test:
                 torch.save(data,
                            os.path.join(self.processed_dir,

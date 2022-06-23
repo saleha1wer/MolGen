@@ -43,10 +43,12 @@ class GNN(pl.LightningModule):
         self.num_layers = config['n_layers']
         self.batch_size = config['batch_size']
         self.dropout_rate = config['dropout_rate']
+        self.second_input= config['second_input']
         dim = self.hidden_size
 
         self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
                                    heads=8, norm=torch.nn.BatchNorm1d(dim))
+
         if config['active_layer'] == 'first':
             self.last_layer = self.gnn._modules['convs'][0]
         elif config['active_layer'] == 'last':
@@ -74,7 +76,10 @@ class GNN(pl.LightningModule):
             elif self.second_input == 'fps':
                 self.fc_1 = Linear(2067,dim)
 
-            self.fc2 = Linear(2*dim, 1)
+            self.fc_2 = Linear(2*dim, int(dim/4))
+            self.fc_3 = Linear(int(dim/4), int(dim/4))
+
+            self.fc2 = Linear(int(dim/4), 1)
 
         self.save_hyperparameters()
         self.emb_f = None
@@ -98,13 +103,17 @@ class GNN(pl.LightningModule):
                 p = graphs.xgb_pred
                 p = p.reshape(p.shape[0],1)
                 p = self.fc_1(p)
-                p = F.dropout(p, p=0.5, training=self.training)
+                p = F.dropout(p, p=self.dropout_rate, training=self.training)
                 x = torch.cat((x, p), dim=1)
+                x = self.fc_2(x)
+                x = self.fc_3(x)
+                x = F.dropout(x, p=self.dropout_rate, training=self.training)
             elif self.second_input == 'fps':
                 p = graphs.fps.float()
                 p = self.fc_1(p)
                 x = torch.cat((x, p), dim=1)
-
+                x = self.fc_2(x)
+                x = self.fc_3(x)
         x = self.fc2(x)
         return x
 
