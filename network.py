@@ -14,7 +14,6 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
-from utils.GINE_network import GINE
 
 
 class GNN(pl.LightningModule):

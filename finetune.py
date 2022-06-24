@@ -19,6 +19,8 @@ from copy import deepcopy
 from sklearn.metrics import mean_squared_error
 from ray import tune
 import shutil
+from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
+
 
 criterion = nn.MSELoss(reduction="mean")
 
@@ -191,12 +193,16 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
             writer.add_scalar('data/train loss', train_loss, epoch)
             writer.add_scalar('data/val loss', val_loss, epoch)
             writer.add_scalar('data/test loss', test_loss, epoch)
+            print('val loss', val_loss)
+            print('train loss', train_loss)
+
 
         if stopper.step(val_loss, finetuned_model, test_score=test_loss, IsMaster=True):
             stopper.report_final_results(i_epoch=epoch)
             break
         stopper.print_best_results(i_epoch=epoch, train_loss=train_loss, val_loss=val_loss,
                                    test_loss=test_loss)
+        
 
     training_time.print_mean_sum_time(prefix='Training')
     test_time.print_mean_sum_time(prefix='Test')

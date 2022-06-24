@@ -1,4 +1,5 @@
 import os
+from unicodedata import name
 import numpy as np
 import pytorch_lightning as pl
 import optuna
@@ -37,8 +38,11 @@ raytune_callback = TuneReportCheckpointCallback(
 # this function makes a custom logging directory name since the normal way (concat all ...
 # the parameters) makes the name too long for windows and it errors on creation of the logging dir
 def trial_name_generator(trial):
-    namestring = str(trial.config['N']) + str(trial.config['E']) + str(trial.config['hidden']) + str(
+    try: 
+        namestring = str(trial.config['N']) + str(trial.config['E']) + str(trial.config['hidden']) + str(
         trial.config['n_layers']) + str(trial.trial_id)
+    except:
+        namestring = str(trial.config['order']) + str(trial.config['trade_off_backbone']) + str(trial.config['trade_off_head'])
     return namestring
 
 

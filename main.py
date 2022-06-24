@@ -11,17 +11,29 @@ from hpo import run_hpo_basic, run_hpo_finetuning, meta_hpo_finetuning, save_los
 from finetune import finetune
 import torch
 from ray import tune
+from network import GNN
 
 
 def main(hpo_ft):
     if hpo_ft:
         finetune_epochs = 50
         patience = 15
-        n_samples = 50
-        space = {'order':1, 'trade_off_head': 0.00005, 'trade_off_backbone':1}
-
-        source_model = ... # load pretrained model
-        best_val_loss, best_configuration = meta_hpo_finetuning(finetune_epochs, patience, n_samples, 0.9, space)
+        n_samples = 30
+        source_config = {'N': 9, 'E':1, 'lr': 0.0001201744224722,'hidden':1024, 'layer_type': GAT , 'n_layers': 7, 
+                        'pool': 'GlobalAttention', 'accelerator': 'cpu','dropout_rate':0, 'v2':True, 'batch_size': 64, 
+                        'input_heads': 1, 'active_layer': 'last', 'second_input': None}
+        space = {'order':tune.choice([1,2,3]), 'trade_off_head': tune.choice([tune.loguniform(1e-4, 1e-1),tune.uniform(0.5, 1)]),
+                 'trade_off_backbone':tune.choice([tune.loguniform(5e-6, 1e-1),tune.uniform(0.5, 1)])}
+        
+        predatamodule, __ = create_pretraining_finetuning_DataModules(64, True, 0.9)
+        source_model = GNN(source_config)
+        # source_trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=150)
+        # source_trainer.fit(source_model, predatamodule.train_dataloader())
+        # source_trainer.test(source_model, predatamodule.test_dataloader())
+        # torch.save(source_model.state_dict(), 'models_saved/bestconfig_GAT_pretrained')
+        
+        source_model.load_state_dict(torch.load('models_saved/bestconfig_GAT_pretrained'))
+        best_val_loss, best_configuration = meta_hpo_finetuning(finetune_epochs, patience, n_samples, 0.9,source_model, space)
     else:
         pretrain_epochs = 50
         train_size = 0.9

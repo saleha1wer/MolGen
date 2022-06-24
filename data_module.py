@@ -23,7 +23,7 @@ print(f"Torch geometric version: {torch_geometric.__version__}")
 
 def add_xgbpred_col(df, model_name):
     model =XGBRegressor()
-    model.load_model('xgb_models/xgb_{}.json'.format(model_name))
+    model.load_model('models_saved/xgb_models/xgb_{}.json'.format(model_name))
     mols = [Chem.MolFromSmiles(smiles) for smiles in df['SMILES']]
     fps = calc_fps(mols)
     preds = model.predict(fps)
