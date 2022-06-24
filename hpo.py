@@ -21,6 +21,7 @@ from ray.tune.utils import wait_for_gpu
 from finetune import finetune
 from datetime import datetime
 import torch
+from network import GNN
 
 test_pretraining_epochs = 125
 test_finetuning_epochs = 75
