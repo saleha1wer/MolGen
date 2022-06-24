@@ -1,15 +1,12 @@
 from ray import tune
-from torch_geometric.nn.models import GIN, GAT,GraphSAGE
-from network import GNN
-import torch 
+import torch
 import pytorch_lightning as pl
-from data_module import GNNDataModule, MoleculeDataset
 from sklearn.model_selection import train_test_split
-import os 
+import os
 import numpy as np
-from torch_geometric.data import DataLoader
 import torch.optim as optim
-from GTOT_Tuning.chem.ftlib.finetune.delta import IntermediateLayerGetter, L2Regularization, get_attribute, SPRegularization, FrobeniusRegularization
+from GTOT_Tuning.chem.ftlib.finetune.delta import IntermediateLayerGetter, L2Regularization, get_attribute, \
+    SPRegularization, FrobeniusRegularization
 from GTOT_Tuning.chem.ftlib.finetune.gtot_tuning import GTOTRegularization
 from torch import nn
 from GTOT_Tuning.chem.commom.early_stop import EarlyStopping
@@ -19,16 +16,16 @@ from GTOT_Tuning.chem.splitters import scaffold_split, random_split, random_scaf
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 from copy import deepcopy
-from torch_geometric.nn import GlobalAttention
 from sklearn.metrics import mean_squared_error
 from ray import tune
 import shutil
 
 criterion = nn.MSELoss(reduction="mean")
 
+
 def train_epoch(model, device, loader, optimizer, weights_regularization, backbone_regularization,
                 head_regularization, target_getter,
-                source_getter, bss_regularization,trade_off_backbone, trade_off_head, scheduler, epoch):
+                source_getter, bss_regularization, trade_off_backbone, trade_off_head, scheduler, epoch):
     model.train()
     meter = Meter()
     loss_epoch = []
@@ -45,7 +42,7 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
         # Whether y is non-null or not.
         is_valid = y ** 2 > 0
         # Loss matrix
-        loss_mat = criterion(pred.double(), y) 
+        loss_mat = criterion(pred.double(), y)
         # loss_mat = criterion(pred.double(),(y + 1.0) / 2)
 
         # loss matrix after removing null target
@@ -63,7 +60,7 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
             loss_reg_backbone = backbone_regularization(intermediate_output_s, intermediate_output_t, batch)
         else:
             loss_reg_backbone = backbone_regularization()
-        loss = loss + cls_loss + trade_off_backbone * loss_reg_backbone + trade_off_head * loss_reg_head 
+        loss = loss + cls_loss + trade_off_backbone * loss_reg_backbone + trade_off_head * loss_reg_head
         loss = loss + 0.1 * loss_weights
         # if torch.isnan(cls_loss):  # or torch.isnan(loss_reg_backbone):
         #     print(pred, loss_reg_backbone)
@@ -83,6 +80,7 @@ def train_epoch(model, device, loader, optimizer, weights_regularization, backbo
     metric = np.mean((meter.compute_metric('rmse')))
     return metric, avg_loss
 
+
 def eval(model, device, loader):
     model.eval()
 
@@ -98,7 +96,7 @@ def eval(model, device, loader):
             is_valid = y ** 2 > 0
             # Loss matrix
             # loss_mat = criterion(pred.double(),(y + 1.0) / 2)
-            loss_mat = criterion(pred.double(),y)
+            loss_mat = criterion(pred.double(), y)
             # loss matrix after removing null target
             loss_mat = torch.where(is_valid, loss_mat,
                                    torch.zeros(loss_mat.shape).to(loss_mat.device).to(loss_mat.dtype))
@@ -107,7 +105,9 @@ def eval(model, device, loader):
     metric = np.mean(eval_meter.compute_metric('rmse'))
     return metric, sum(loss_sum) / len(loss_sum)
 
-def finetune(save_model_name, source_model, data_module, epochs, report_to_raytune, patience=40,order=1,trade_off_backbone= 0.0005,trade_off_head=0.1):
+
+def finetune(save_model_name, source_model, data_module, epochs, report_to_raytune, patience=40, order=1,
+             trade_off_backbone=0.0005, trade_off_head=0.1):
     finetuned_model = deepcopy(source_model)
     device = torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
     finetuned_model.to(device)
@@ -120,7 +120,6 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
     train_loader = data_module.train_dataloader()
     test_loader = data_module.test_dataloader()
     val_loader = data_module.val_dataloader()
-
 
     # set up optimizer
     # different learning rate for different part of GNN
@@ -142,20 +141,18 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
     backbone_regularization = lambda x: x
     bss_regularization = lambda x: x
 
-
     ''' the proposed method GTOT-tuning'''
     backbone_regularization = GTOTRegularization(order=order)
     head_regularization = L2Regularization(nn.ModuleList([finetuned_model.gnn]))
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, patience=10,
-                                                            verbose=False,
-                                                            threshold=0.0001, threshold_mode='rel', cooldown=0,
-                                                            min_lr=1e-8,
-                                                            eps=1e-08)
+                                                           verbose=False,
+                                                           threshold=0.0001, threshold_mode='rel', cooldown=0,
+                                                           min_lr=1e-8,
+                                                           eps=1e-08)
     stopper = EarlyStopping(mode='lower', patience=patience, filename=save_model_name)
 
-
-    fname = 'finetuning_logs' # delete file if already exists
+    fname = 'finetuning_logs'  # delete file if already exists
     if os.path.exists(fname):
         shutil.rmtree(fname)
         print("removed the existing tensorboard file.")
@@ -167,19 +164,19 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
         print("====epoch " + str(epoch))
         training_time.epoch_start()
         train_acc, train_loss = train_epoch(finetuned_model, device, train_loader, optimizer,
-                                                                weights_regularization,
-                                                                backbone_regularization,
-                                                                head_regularization, target_getter,
-                                                                source_getter, bss_regularization,
-                                                                trade_off_backbone, trade_off_head,
-                                                                scheduler,
-                                                                epoch)
+                                            weights_regularization,
+                                            backbone_regularization,
+                                            head_regularization, target_getter,
+                                            source_getter, bss_regularization,
+                                            trade_off_backbone, trade_off_head,
+                                            scheduler,
+                                            epoch)
         training_time.epoch_end()
 
         print("====Evaluation")
         val_acc, val_loss = eval(finetuned_model, device, val_loader)
         if report_to_raytune:
-            tune.report(loss = val_loss) #report the validation loss for the underlying tune process during HPO
+            tune.report(loss=val_loss)  # report the validation loss for the underlying tune process during HPO
         test_time.epoch_start()
         test_acc, test_loss = eval(finetuned_model, device, test_loader)
         test_time.epoch_end()
@@ -194,12 +191,12 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
             writer.add_scalar('data/train loss', train_loss, epoch)
             writer.add_scalar('data/val loss', val_loss, epoch)
             writer.add_scalar('data/test loss', test_loss, epoch)
-            
+
         if stopper.step(val_loss, finetuned_model, test_score=test_loss, IsMaster=True):
             stopper.report_final_results(i_epoch=epoch)
             break
         stopper.print_best_results(i_epoch=epoch, train_loss=train_loss, val_loss=val_loss,
-                                    test_loss=test_loss)
+                                   test_loss=test_loss)
 
     training_time.print_mean_sum_time(prefix='Training')
     test_time.print_mean_sum_time(prefix='Test')
@@ -207,9 +204,3 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
     print('tensorboard file is saved in', fname)
     writer.close()
     return finetuned_model
-
-
-
-
-
-
