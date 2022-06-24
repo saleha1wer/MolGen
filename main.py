@@ -4,7 +4,7 @@ import numpy as np
 import pytorch_lightning as pl
 from sklearn.model_selection import train_test_split
 from data_module import GNNDataModule, MoleculeDataset, create_pretraining_finetuning_DataModules
-from torch_geometric.nn.models import GAT
+from torch_geometric.nn.models import GAT, GIN
 from ray.tune.utils import wait_for_gpu
 from hpo import run_hpo_basic, run_hpo_finetuning, meta_hpo_finetuning, save_loss_and_config, calculate_test_loss, \
     meta_hpo_basic
@@ -12,7 +12,7 @@ from finetune import finetune
 import torch
 from ray import tune
 from network import GNN
-
+from finetune import finetune
 
 def main(hpo_ft):
     if hpo_ft:
@@ -25,7 +25,7 @@ def main(hpo_ft):
         space = {'order':tune.choice([1,2,3]), 'trade_off_head': tune.choice([tune.loguniform(1e-4, 1e-1),tune.uniform(0.5, 1)]),
                  'trade_off_backbone':tune.choice([tune.loguniform(5e-6, 1e-1),tune.uniform(0.5, 1)])}
         
-        predatamodule, __ = create_pretraining_finetuning_DataModules(64, True, 0.9)
+        predatamodule, finedatamodule = create_pretraining_finetuning_DataModules(64, True, 0.9)
         source_model = GNN(source_config)
         # source_trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=150)
         # source_trainer.fit(source_model, predatamodule.train_dataloader())
@@ -34,6 +34,7 @@ def main(hpo_ft):
         
         source_model.load_state_dict(torch.load('models_saved/bestconfig_GAT_pretrained'))
         best_val_loss, best_configuration = meta_hpo_finetuning(finetune_epochs, patience, n_samples, 0.9,source_model, space)
+        # finetune('test',source_model,finedatamodule,30,True,10)
         print(best_val_loss, best_configuration)
     else:
         pretrain_epochs = 50
@@ -43,7 +44,7 @@ def main(hpo_ft):
         n_inputs = 1
         second_input = 'fps'
         space = {'N': 9, 'E': 1, 'lr': tune.loguniform(1e-5, 1e-2), 'hidden': tune.choice([64, 128, 256, 512, 1024]),
-                'layer_type': GAT, 'n_layers': tune.choice([2,4,6,8]), 'pool': tune.choice(['mean', 'GlobalAttention']),
+                'layer_type': GIN, 'n_layers': tune.choice([2,4,6,8]), 'pool': tune.choice(['mean', 'GlobalAttention']),
                 'dropout_rate' : tune.choice([0,0.1,0.3,0.5]), 'accelerator': 'cpu', 'batch_size': 64,
                 'input_heads': 1, 'active_layer': 'first', 'second_input': None}
         
@@ -52,10 +53,11 @@ def main(hpo_ft):
                                                     train_size = train_size,
                                                     space = space,
                                                     report_test_loss = True)
-
-        save_loss_and_config(best_val_loss,best_val_loss, best_config)
+        print('best config')
+        print(best_config)
+        save_loss_and_config(best_val_loss,best_test_loss, best_config)
         print('Completed a basic HPO run!')
 
 
 if __name__ == '__main__':
-    main(hpo_ft=True)
+    main(hpo_ft=False)
