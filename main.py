@@ -25,7 +25,7 @@ def main(hpo_ft):
         space = {'order':tune.choice([1,2,3]), 'trade_off_head': tune.choice([tune.loguniform(1e-4, 1e-1),tune.uniform(0.5, 1)]),
                  'trade_off_backbone':tune.choice([tune.loguniform(5e-6, 1e-1),tune.uniform(0.5, 1)])}
         
-        predatamodule, finedatamodule = create_pretraining_finetuning_DataModules(64, True, 0.9)
+        # predatamodule, finedatamodule = create_pretraining_finetuning_DataModules(64, True, 0.9)
         source_model = GNN(source_config)
         # source_trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=150)
         # source_trainer.fit(source_model, predatamodule.train_dataloader())
@@ -34,7 +34,10 @@ def main(hpo_ft):
         
         source_model.load_state_dict(torch.load('models_saved/bestconfig_GAT_pretrained'))
         best_val_loss, best_configuration = meta_hpo_finetuning(finetune_epochs, patience, n_samples, 0.9,source_model, space)
-        # finetune('test',source_model,finedatamodule,30,True,10)
+        # finetuned_model, train_losses,val_losses = finetune('test',source_model,finedatamodule,30,True,10,trade_off_backbone=2.5,trade_off_head=0.0005)
+        # torch.save(finetuned_model.state_dict(), 'models_saved/bestconfig_GAT_finetuned')
+        # print(train_losses)
+        # print(val_losses)
         print(best_val_loss, best_configuration)
     else:
         pretrain_epochs = 50
@@ -46,7 +49,7 @@ def main(hpo_ft):
         space = {'N': 9, 'E': 1, 'lr': tune.loguniform(1e-5, 1e-2), 'hidden': tune.choice([64, 128, 256, 512, 1024]),
                 'layer_type': GIN, 'n_layers': tune.choice([2,4,6,8]), 'pool': tune.choice(['mean', 'GlobalAttention']),
                 'dropout_rate' : tune.choice([0,0.1,0.3,0.5]), 'accelerator': 'cpu', 'batch_size': 64,
-                'input_heads': 1, 'active_layer': 'first', 'second_input': None}
+                'input_heads': 1, 'active_layer': 'last', 'second_input': None}
         
         best_val_loss,best_test_loss, best_config = meta_hpo_basic(pretrain_epochs,
                                                     n_samples = 50,
@@ -60,4 +63,5 @@ def main(hpo_ft):
 
 
 if __name__ == '__main__':
-    main(hpo_ft=False)
+    main(hpo_ft=True)
+

@@ -162,6 +162,8 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
     writer = SummaryWriter(fname)
     training_time = Runtime()
     test_time = Runtime()
+    train_losses = []
+    val_losses = []
     for epoch in range(1, epochs):
         print("====epoch " + str(epoch))
         training_time.epoch_start()
@@ -196,7 +198,8 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
             print('val loss', val_loss)
             print('train loss', train_loss)
 
-
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
         if stopper.step(val_loss, finetuned_model, test_score=test_loss, IsMaster=True):
             stopper.report_final_results(i_epoch=epoch)
             break
@@ -209,4 +212,4 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
 
     print('tensorboard file is saved in', fname)
     writer.close()
-    return finetuned_model
+    return finetuned_model,train_losses,val_losses
