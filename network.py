@@ -14,8 +14,8 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
+from utils.GINE_network import GINE
 
-        
 class GNN_GAT(pl.LightningModule):
     def __init__(self, config, data_dir=None, name='GAT'):
         super(GNN_GAT, self).__init__()
@@ -38,9 +38,7 @@ class GNN_GAT(pl.LightningModule):
 
         self.node_embedding = Linear(in_features=self.num_features, out_features=self.hidden_size)
         self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.hidden_size)
-
-        self.gnn = self.layer_type(in_channels=dim, hidden_channels=dim, num_layers=self.num_layers,
-                                   norm=torch.nn.BatchNorm1d(dim))
+        
         if config['active_layer'] == 'first':
             self.last_layer = self.gnn._modules['convs'][0]
         elif config['active_layer'] == 'last':
@@ -62,15 +60,12 @@ class GNN_GAT(pl.LightningModule):
             self.second_input = config['second_input']
             if self.second_input == 'prot':
                 self.fc_1 = Linear(4, dim)
-
             elif self.second_input == 'xgb':
                 self.fc_1 = Linear(1,dim)
             elif self.second_input == 'fps':
                 self.fc_1 = Linear(2067,dim)
-
             self.fc_2 = Linear(2*dim, int(dim/4))
             self.fc_3 = Linear(int(dim/4), int(dim/4))
-
             self.fc2 = Linear(int(dim/4), 1)
 
         self.save_hyperparameters()
@@ -167,17 +162,18 @@ class GNN_GINE(pl.LightningModule):
         self.dropout_rate = config['dropout_rate']
         self.second_input= config['second_input']
         dim = self.hidden_size
-
-
-        self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
+        self.layer_type = GINE
+        if self.edge_dim == 0:
+            self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers,
                                    norm=torch.nn.BatchNorm1d(dim))
+        if self.edge_dim != 0:
+            self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers,
+                                       norm=torch.nn.BatchNorm1d(dim))
 
         # self.node_embedding = Linear(in_features=self.num_features, out_features=self.hidden_size)
 
         self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.num_features)
 
-        self.gnn = self.layer_type(in_channels=dim, hidden_channels=dim, num_layers=self.num_layers,
-                                   norm=torch.nn.BatchNorm1d(dim))
         if config['active_layer'] == 'first':
             self.last_layer = self.gnn._modules['convs'][0]
         elif config['active_layer'] == 'last':

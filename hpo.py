@@ -48,22 +48,11 @@ def save_loss_and_config(val_loss='', test_loss='', configuration=''):
     file.write(message)
 
 def meta_hpo_basic(train_epochs, n_samples, train_size,space, report_test_loss = True):
-    NUM_NODE_FEATURES = 5
-    NUM_EDGE_FEATURES = 3
-    max_t_per_trial = 2000  # hpo param
     batch_size = 64
     no_a2a = True  # use a2a data or not in adenosine set
     no_a2a = '_no_a2a' if no_a2a else ''
     # for prot_target_encoding choose: None or 'one-hot-encoding'
     # if choosing one-hot-encoding change input_heads in gnn_config
-
-    #
-    ######################################################################################################################
-    # HPO on pretrain data (adenosine)
-    # best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
-    # print('BEST CONFIG: ')
-    # print(best_config)
-    # Pretrain best config on pretrain data
 
     gnn_config = space
     # pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
@@ -87,36 +76,20 @@ def meta_hpo_basic(train_epochs, n_samples, train_size,space, report_test_loss =
 
 
 
-def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size, report_test_loss = True):
-    NUM_NODE_FEATURES = 5
-    NUM_EDGE_FEATURES = 3
-    max_t_per_trial = 2000  # hpo param
+def meta_hpo_finetuning(finetune_epochs, patience,n_samples, train_size,source_model, space,report_test_loss = True):
     batch_size = 64
     no_a2a = True  # use a2a data or not in adenosine set
     no_a2a = '_no_a2a' if no_a2a else ''
     # for prot_target_encoding choose: None or 'one-hot-encoding'
     # if choosing one-hot-encoding change input_heads in gnn_config
 
-    #
-    ######################################################################################################################
-    # HPO on pretrain data (adenosine)
-    # best_config = run_hpo(max_epochs=max_epochs, n_samples=n_samples, max_t_per_trial=max_t_per_trial, data_module=pre_data_module, gnn_config=gnn_config)
-    # print('BEST CONFIG: ')
-    # print(best_config)
-    # Pretrain best config on pretrain data
-    gnn_config = {'N': NUM_NODE_FEATURES, 'E': NUM_EDGE_FEATURES, 'lr': tune.loguniform(1e-4, 1e-2), 'hidden': tune.choice([128, 256, 512]),
-              'layer_type': GAT, 'n_layers': tune.choice([2, 4, 6, 8]), 'pool': tune.choice(['mean', 'GlobalAttention']), 'accelerator': 'cpu',
-              'batch_size': batch_size, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': tune.choice([tune.loguniform(1e-4, 1e-2), tune.loguniform(1, 10)]),
-              'trade_off_head':tune.choice([tune.loguniform(1e-5, 1e-1), tune.loguniform(0.5, 1)]), 'order': tune.choice([1, 2]), 'patience': 10, 'dropout_rate':tune.uniform(0, 0.6)}
-    
-    
+    gnn_config = space
     pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
 
-    best_configuration, best_val_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,
-                                                       pre_datamodule, fine_datamodule, gnn_config)
-    test_result = calculate_test_loss(pre_datamodule, fine_datamodule, pretrain_epochs, finetune_epochs, best_configuration)
+    best_configuration, best_val_loss = run_hpo_finetuning(finetune_epochs, patience, n_samples,
+                                                          fine_datamodule, gnn_config,source_model)
 
-    return best_val_loss, test_result[0]['test_loss'], best_configuration
+    return best_val_loss, best_configuration
 
 def calculate_test_loss(pre_datamodule, finetune_data_module, config):
     pretrain_model = GNN(config)
@@ -141,66 +114,33 @@ def calculate_test_loss(pre_datamodule, finetune_data_module, config):
     return test_result
 
 
-def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config):
+def run_hpo_finetuning(finetune_epochs,patience, n_samples, fine_data_module, gnn_config, source_model):
     def train_tune(config):
-        pretrain_model = GNN(config)
-        trainer = pl.Trainer(max_epochs=pretrain_epochs,
-                             accelerator = config['accelerator'],
-                             devices=1,
-                             enable_progress_bar=True,
-                             enable_checkpointing=True,
-                             callbacks=[raytune_callback])
-        trainer.fit(pretrain_model, pre_data_module)
         finetuned_model = finetune(save_model_name = 'final_',
-                                   source_model = pretrain_model,
+                                   source_model = source_model,
                                    data_module = fine_data_module,
                                    epochs=finetune_epochs,
-                                   patience=config['patience'],
+                                   patience=patience,
                                    trade_off_backbone=config['trade_off_backbone'],
                                    trade_off_head=config['trade_off_head'],
                                    order=config['order'],
                                    report_to_raytune=True)
 
     start_time = time.time()
-    reporter = CLIReporter(parameter_columns=['learning_rate'],
-                           metric_columns=['loss', 'training_iteration']
-                           )
 
-    optuna_search = OptunaSearch(
-        metric='loss',
-        mode='min'
-    )
+    tpe = HyperOptSearch(
+            metric="loss", mode="min", n_initial_points=10)
 
-    bohb_scheduler = HyperBandForBOHB(
-        time_attr='time_total_s',
-        max_t=max_t_per_trial,
-        metric='loss',
-        mode='min'
-    )
-
-    bohb_search_alg = TuneBOHB(
-        metric='loss',
-        mode='min'
-    )
     analysis = tune.run(partial(train_tune),
                         config=gnn_config,
                         num_samples=n_samples,  # number of samples taken in the entire sample space
-                        search_alg=optuna_search,
-                        #scheduler=bohb_scheduler,
+                        search_alg=tpe,
                         local_dir=os.getcwd(),
-                        trial_dirname_creator=trial_name_generator,
-                        #memory=1 * 1024 * 1024 * 1024
-#                                         resources_per_trial={
-# #                            gnn_config['accelerator'] : 1,
-#                             'memory'    :   1 * 1024 * 1024 * 1024
-                        )
+                        trial_dirname_creator=trial_name_generator)
 
     print('Finished hyperparameter optimization.')
     best_configuration = analysis.get_best_config(metric='loss', mode='min', scope='last')
     best_trial = analysis.get_best_trial(metric='loss', mode='min', scope='last')
-
-    print(f"Best trial configuration:{best_trial.config}")
-    print(f"Best trial final validation loss:{best_trial.last_result['loss']}")
 
     end_time = time.time()
     print(f"Elapsed time:{end_time - start_time}")
@@ -218,22 +158,7 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
         trainer.fit(model, data_module)
 
     start = time.time()
-    # trainer.test(model, data_module) #loads the best checkpoint automatically
-    # reporter = CLIReporter(parameter_columns=['learning_rate', 'num_propagation_steps', 'weight_decay'],
-    #                         metric_columns=['loss', 'training_iteration']
-    #                         )
 
-    # bohb_scheduler = HyperBandForBOHB(
-    #     time_attr='training_iteration',
-    #     max_t=max_t_per_trial,
-    #     metric='loss',
-    #     mode='min'
-    # )
-
-    # bohb_search_alg = TuneBOHB(
-    #     metric='loss',
-    #     mode='min'
-    # )
     tpe = HyperOptSearch(
             metric="loss", mode="min", n_initial_points=10)
 
@@ -269,6 +194,7 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
                             callbacks=[raytune_callback])
 
     val_data_loader = data_module.val_dataloader()
+    test_data_loader = data_module.test_dataloader()
     val_results = trainer.test(best_checkpoint_model, val_data_loader)
     test_results = trainer.test(best_checkpoint_model, test_data_loader)
     end = time.time()
