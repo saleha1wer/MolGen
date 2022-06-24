@@ -34,6 +34,7 @@ def main(hpo_ft):
         
         source_model.load_state_dict(torch.load('models_saved/bestconfig_GAT_pretrained'))
         best_val_loss, best_configuration = meta_hpo_finetuning(finetune_epochs, patience, n_samples, 0.9,source_model, space)
+        print(best_val_loss, best_configuration)
     else:
         pretrain_epochs = 50
         train_size = 0.9
