@@ -15,36 +15,31 @@ from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
 
-        
-class GNN_GAT(pl.LightningModule):
+
+class GNN(pl.LightningModule):
     def __init__(self, config, data_dir=None, name='GAT'):
-        super(GNN_GAT, self).__init__()
+        super(GNN, self).__init__()
         self.name = name
         self.data_dir = data_dir or os.getcwd()  # pass this from now on
         self.input_heads = config['input_heads']
         self.learning_rate = config['lr']
         self.num_features = config['N']
         self.edge_dim = config['E']
-        self.hidden_size = config['hidden']
         self.layer_type = config['layer_type']
+        self.hidden_size = config['hidden']
         self.num_layers = config['n_layers']
         self.batch_size = config['batch_size']
         self.dropout_rate = config['dropout_rate']
-        self.second_input= config['second_input']
+        self.second_input = config['second_input']
         dim = self.hidden_size
 
         self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
                                    heads=8, norm=torch.nn.BatchNorm1d(dim))
 
-        self.node_embedding = Linear(in_features=self.num_features, out_features=self.hidden_size)
-        self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.hidden_size)
-
-        self.gnn = self.layer_type(in_channels=dim, hidden_channels=dim, num_layers=self.num_layers,
-                                   norm=torch.nn.BatchNorm1d(dim))
         if config['active_layer'] == 'first':
             self.last_layer = self.gnn._modules['convs'][0]
         elif config['active_layer'] == 'last':
-            self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
+            self.last_layer = self.gnn._modules['convs'][self.num_layers - 1]
 
         if config['pool'] == 'mean':
             self.pool = global_mean_pool
@@ -55,30 +50,12 @@ class GNN_GAT(pl.LightningModule):
 
         self.fc1 = Linear(dim, dim)
 
-        if self.input_heads == 1:
-            self.fc2 = Linear(dim, 1)
-
-        elif self.input_heads == 2:
-            self.second_input = config['second_input']
-            if self.second_input == 'prot':
-                self.fc_1 = Linear(4, dim)
-
-            elif self.second_input == 'xgb':
-                self.fc_1 = Linear(1,dim)
-            elif self.second_input == 'fps':
-                self.fc_1 = Linear(2067,dim)
-
-            self.fc_2 = Linear(2*dim, int(dim/4))
-            self.fc_3 = Linear(int(dim/4), int(dim/4))
-
-            self.fc2 = Linear(int(dim/4), 1)
+        self.fc2 = Linear(dim, 1)
 
         self.save_hyperparameters()
         self.emb_f = None
 
     def forward(self, graphs: Data):
-        # x = self.node_embedding(graphs.x[:, :self.num_features].to(torch.float))
-        # edge_attr = self.edge_embedding(graphs.edge_attr[:, :self.edge_dim].to(torch.float))
         x = graphs.x[:, :self.num_features].to(torch.float)
         edge_attr = graphs.edge_attr[:, :self.edge_dim].to(torch.float)
         edge_index = graphs.edge_index
@@ -88,26 +65,6 @@ class GNN_GAT(pl.LightningModule):
         x = F.relu(self.fc1(self.emb_f))
         x = F.dropout(x, p=self.dropout_rate, training=self.training)
 
-        if self.input_heads == 2:
-            if self.second_input == 'prot':
-                p = self.fc_1(graphs.p)
-                x = torch.concat((x, p), dim=-1)  # on PyTorch 1.9 use torch.ca
-
-            elif self.second_input == 'xgb':
-                p = graphs.xgb_pred
-                p = p.reshape(p.shape[0],1)
-                p = self.fc_1(p)
-                p = F.dropout(p, p=self.dropout_rate, training=self.training)
-                x = torch.cat((x, p), dim=1)
-                x = self.fc_2(x)
-                x = self.fc_3(x)
-                x = F.dropout(x, p=self.dropout_rate, training=self.training)
-            elif self.second_input == 'fps':
-                p = graphs.fps.float()
-                p = self.fc_1(p)
-                x = torch.cat((x, p), dim=1)
-                x = self.fc_2(x)
-                x = self.fc_3(x)
         x = self.fc2(x)
         return x
 
@@ -165,23 +122,22 @@ class GNN_GINE(pl.LightningModule):
         self.num_layers = config['n_layers']
         self.batch_size = config['batch_size']
         self.dropout_rate = config['dropout_rate']
-        self.second_input= config['second_input']
+        self.second_input = config['second_input']
         dim = self.hidden_size
 
-
-        self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
-                                   norm=torch.nn.BatchNorm1d(dim))
+        # if self.edge_dim == 0:
+        #     self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers,
+        #                                norm=torch.nn.BatchNorm1d(dim))
+        # if self.edge_dim != 0:
 
         # self.node_embedding = Linear(in_features=self.num_features, out_features=self.hidden_size)
 
-        self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.num_features)
+        # self.edge_embedding = Linear(in_features=self.edge_dim, out_features=self.num_features)
 
-        self.gnn = self.layer_type(in_channels=dim, hidden_channels=dim, num_layers=self.num_layers,
-                                   norm=torch.nn.BatchNorm1d(dim))
         if config['active_layer'] == 'first':
             self.last_layer = self.gnn._modules['convs'][0]
         elif config['active_layer'] == 'last':
-            self.last_layer = self.gnn._modules['convs'][self.num_layers-1]
+            self.last_layer = self.gnn._modules['convs'][self.num_layers - 1]
 
         if config['pool'] == 'mean':
             self.pool = global_mean_pool
@@ -201,14 +157,14 @@ class GNN_GINE(pl.LightningModule):
                 self.fc_1 = Linear(4, dim)
 
             elif self.second_input == 'xgb':
-                self.fc_1 = Linear(1,dim)
+                self.fc_1 = Linear(1, dim)
             elif self.second_input == 'fps':
-                self.fc_1 = Linear(2067,dim)
+                self.fc_1 = Linear(2067, dim)
 
-            self.fc_2 = Linear(2*dim, int(dim/4))
-            self.fc_3 = Linear(int(dim/4), int(dim/4))
+            self.fc_2 = Linear(2 * dim, int(dim / 4))
+            self.fc_3 = Linear(int(dim / 4), int(dim / 4))
 
-            self.fc2 = Linear(int(dim/4), 1)
+            self.fc2 = Linear(int(dim / 4), 1)
 
         self.save_hyperparameters()
         self.emb_f = None
@@ -232,7 +188,7 @@ class GNN_GINE(pl.LightningModule):
 
             elif self.second_input == 'xgb':
                 p = graphs.xgb_pred
-                p = p.reshape(p.shape[0],1)
+                p = p.reshape(p.shape[0], 1)
                 p = self.fc_1(p)
                 p = F.dropout(p, p=self.dropout_rate, training=self.training)
                 x = torch.cat((x, p), dim=1)

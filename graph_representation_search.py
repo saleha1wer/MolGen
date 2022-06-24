@@ -6,9 +6,8 @@ import time
 from sklearn.model_selection import train_test_split
 from functools import partial
 
-from network import GNN_GINE
+from network import GNN
 from data_module import GNNDataModule, MoleculeDataset
-from utils.GINE_network import GINE
 
 from ray import tune
 from ray.tune import CLIReporter
@@ -30,7 +29,7 @@ raytune_callback = TuneReportCheckpointCallback(
 def main():
     adenosine_star = False
     max_epochs = 100
-    n_samples = 100
+    n_samples = 1
     max_t_per_trial = 1000
     batch_size = 64
 
@@ -56,16 +55,15 @@ def main():
 
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
-    grid_config = {
-        'N': tune.grid_search([1, 3, 5, 9]),
-        'E': tune.grid_search([0]),
+    gnn_debug_config = {
+        'N': 1,
+        'E': 1,
         'lr': 3e-4,  # learning rate
-        'hidden': 128,  # embedding/hidden dimensions
-        'layer_type': GINE,
-        'n_layers': 4,
-        'num_workers': 8,
+        'hidden': 32,  # embedding/hidden dimensions
+        'layer_type': 'GINE',
+        'n_layers': 2,
+        'num_workers': 0,
         'pool': 'mean',
-        'v2': True,
         'input_heads': 1,
         'second_input': 'prot',
         'active_layer': 'first',
@@ -74,12 +72,29 @@ def main():
         # 'batch_size': tune.choice([16,32,64,128])
     }
 
+    model = GNN(gnn_debug_config)
+    trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
+    trainer.fit(model, data_module)
 
-    # model = GNN(gnn_debug_config)
-    # trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=200)
+    grid_config = {
+        'N': tune.grid_search([1, 3, 5, 9]),
+        'E': tune.grid_search([1]),
+        'lr': 3e-4,  # learning rate
+        'hidden': 32,  # embedding/hidden dimensions
+        'layer_type': 'GINE',
+        'n_layers': 2,
+        'num_workers': 8,
+        'pool': 'mean',
+        'input_heads': 1,
+        'second_input': 'prot',
+        'active_layer': 'first',
+        'dropout_rate': 0.5,
+        'batch_size': batch_size
+        # 'batch_size': tune.choice([16,32,64,128])
+    }
 
     def train_tune(config):
-        model = GNN_GINE(config)
+        model = GNN(config)
         trainer = pl.Trainer(max_epochs=max_epochs,
                              accelerator='cpu',
                              devices=1,
@@ -96,6 +111,7 @@ def main():
                         local_dir=os.getcwd(),
                         resources_per_trial={
                             'cpu': 8
+                            # 'gpu': 1
                             # 'memory'    :   10 * 1024 * 1024 * 1024
                         })
 

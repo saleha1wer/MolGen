@@ -1,4 +1,3 @@
-
 import os
 import numpy as np
 import pytorch_lightning as pl
@@ -7,7 +6,6 @@ import time
 from sklearn.model_selection import train_test_split
 from functools import partial
 
-from network import GNN
 from data_module import GNNDataModule, MoleculeDataset, create_pretraining_finetuning_DataModules
 
 from ray import tune
@@ -22,7 +20,7 @@ from torch_geometric.nn.models import GIN, GAT, PNA, GraphSAGE
 from ray.tune.utils import wait_for_gpu
 from finetune import finetune
 from datetime import datetime
-import torch 
+import torch
 
 test_pretraining_epochs = 125
 test_finetuning_epochs = 75
@@ -34,20 +32,23 @@ raytune_callback = TuneReportCheckpointCallback(
     filename='checkpoint',
     on='validation_end')
 
-#this function makes a custom logging directory name since the normal way (concat all ...
+
+# this function makes a custom logging directory name since the normal way (concat all ...
 # the parameters) makes the name too long for windows and it errors on creation of the logging dir
 def trial_name_generator(trial):
-    namestring = str(trial.config['N'])+str(trial.config['E'])+str(trial.config['hidden'])+str(trial.config['n_layers'])+str(trial.trial_id)
+    namestring = str(trial.config['N']) + str(trial.config['E']) + str(trial.config['hidden']) + str(
+        trial.config['n_layers']) + str(trial.trial_id)
     return namestring
 
-def save_loss_and_config(val_loss='', test_loss='', configuration=''):
 
+def save_loss_and_config(val_loss='', test_loss='', configuration=''):
     now_string = datetime.now().strftime("%d-%m-%Y-%H-%M-%S")
-    file = open("HPO_result_logs/"+now_string+"-HPO_result.txt", 'w')
+    file = open("HPO_result_logs/" + now_string + "-HPO_result.txt", 'w')
     message = f"Test loss achieved: {str(test_loss)} \nVal loss achieved:{str(val_loss)} \nConfiguration found: {str(configuration)}"
     file.write(message)
 
-def meta_hpo_basic(train_epochs, n_samples, train_size,space, report_test_loss = True):
+
+def meta_hpo_basic(train_epochs, n_samples, train_size, space, report_test_loss=True):
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 3
     max_t_per_trial = 2000  # hpo param
@@ -68,7 +69,7 @@ def meta_hpo_basic(train_epochs, n_samples, train_size,space, report_test_loss =
     gnn_config = space
     # pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
     dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',
-                                prot_target_encoding=None,xgb = None,include_fps=False)
+                              prot_target_encoding=None, xgb=None, include_fps=False)
 
     train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=train_size, random_state=0)
     data_train = dataset[train_indices.tolist()]
@@ -81,13 +82,12 @@ def meta_hpo_basic(train_epochs, n_samples, train_size,space, report_test_loss =
     data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     best_configuration, best_val_loss, best_test_loss = run_hpo_basic(train_epochs, n_samples,
-                                                       data_module, gnn_config)
+                                                                      data_module, gnn_config)
 
-    return best_val_loss,best_test_loss, best_configuration
+    return best_val_loss, best_test_loss, best_configuration
 
 
-
-def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size, report_test_loss = True):
+def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size, report_test_loss=True):
     NUM_NODE_FEATURES = 5
     NUM_EDGE_FEATURES = 3
     max_t_per_trial = 2000  # hpo param
@@ -104,19 +104,24 @@ def meta_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, train_size,
     # print('BEST CONFIG: ')
     # print(best_config)
     # Pretrain best config on pretrain data
-    gnn_config = {'N': NUM_NODE_FEATURES, 'E': NUM_EDGE_FEATURES, 'lr': tune.loguniform(1e-4, 1e-2), 'hidden': tune.choice([128, 256, 512]),
-              'layer_type': GAT, 'n_layers': tune.choice([2, 4, 6, 8]), 'pool': tune.choice(['mean', 'GlobalAttention']), 'accelerator': 'cpu',
-              'batch_size': batch_size, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': tune.choice([tune.loguniform(1e-4, 1e-2), tune.loguniform(1, 10)]),
-              'trade_off_head':tune.choice([tune.loguniform(1e-5, 1e-1), tune.loguniform(0.5, 1)]), 'order': tune.choice([1, 2]), 'patience': 10, 'dropout_rate':tune.uniform(0, 0.6)}
-    
-    
+    gnn_config = {'N': NUM_NODE_FEATURES, 'E': NUM_EDGE_FEATURES, 'lr': tune.loguniform(1e-4, 1e-2),
+                  'hidden': tune.choice([128, 256, 512]),
+                  'layer_type': GAT, 'n_layers': tune.choice([2, 4, 6, 8]),
+                  'pool': tune.choice(['mean', 'GlobalAttention']), 'accelerator': 'cpu',
+                  'batch_size': batch_size, 'input_heads': 1, 'active_layer': 'first',
+                  'trade_off_backbone': tune.choice([tune.loguniform(1e-4, 1e-2), tune.loguniform(1, 10)]),
+                  'trade_off_head': tune.choice([tune.loguniform(1e-5, 1e-1), tune.loguniform(0.5, 1)]),
+                  'order': tune.choice([1, 2]), 'patience': 10, 'dropout_rate': tune.uniform(0, 0.6)}
+
     pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
 
     best_configuration, best_val_loss = run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial,
-                                                       pre_datamodule, fine_datamodule, gnn_config)
-    test_result = calculate_test_loss(pre_datamodule, fine_datamodule, pretrain_epochs, finetune_epochs, best_configuration)
+                                                           pre_datamodule, fine_datamodule, gnn_config)
+    test_result = calculate_test_loss(pre_datamodule, fine_datamodule, pretrain_epochs, finetune_epochs,
+                                      best_configuration)
 
     return best_val_loss, test_result[0]['test_loss'], best_configuration
+
 
 def calculate_test_loss(pre_datamodule, finetune_data_module, config):
     pretrain_model = GNN(config)
@@ -135,25 +140,26 @@ def calculate_test_loss(pre_datamodule, finetune_data_module, config):
                                trade_off_backbone=config['trade_off_backbone'],
                                trade_off_head=config['trade_off_head'],
                                order=config['order'],
-                               report_to_raytune = False)
+                               report_to_raytune=False)
     test_result = trainer.test(finetuned_model, finetune_data_module)
     torch.save(finetuned_model.state_dict(), 'models/final_model')
     return test_result
 
 
-def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module, gnn_config):
+def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_trial, pre_data_module, fine_data_module,
+                       gnn_config):
     def train_tune(config):
         pretrain_model = GNN(config)
         trainer = pl.Trainer(max_epochs=pretrain_epochs,
-                             accelerator = config['accelerator'],
+                             accelerator=config['accelerator'],
                              devices=1,
                              enable_progress_bar=True,
                              enable_checkpointing=True,
                              callbacks=[raytune_callback])
         trainer.fit(pretrain_model, pre_data_module)
-        finetuned_model = finetune(save_model_name = 'final_',
-                                   source_model = pretrain_model,
-                                   data_module = fine_data_module,
+        finetuned_model = finetune(save_model_name='final_',
+                                   source_model=pretrain_model,
+                                   data_module=fine_data_module,
                                    epochs=finetune_epochs,
                                    patience=config['patience'],
                                    trade_off_backbone=config['trade_off_backbone'],
@@ -186,13 +192,13 @@ def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_tr
                         config=gnn_config,
                         num_samples=n_samples,  # number of samples taken in the entire sample space
                         search_alg=optuna_search,
-                        #scheduler=bohb_scheduler,
+                        # scheduler=bohb_scheduler,
                         local_dir=os.getcwd(),
                         trial_dirname_creator=trial_name_generator,
-                        #memory=1 * 1024 * 1024 * 1024
-#                                         resources_per_trial={
-# #                            gnn_config['accelerator'] : 1,
-#                             'memory'    :   1 * 1024 * 1024 * 1024
+                        # memory=1 * 1024 * 1024 * 1024
+                        #                                         resources_per_trial={
+                        # #                            gnn_config['accelerator'] : 1,
+                        #                             'memory'    :   1 * 1024 * 1024 * 1024
                         )
 
     print('Finished hyperparameter optimization.')
@@ -206,15 +212,16 @@ def run_hpo_finetuning(pretrain_epochs, finetune_epochs, n_samples, max_t_per_tr
     print(f"Elapsed time:{end_time - start_time}")
     return best_configuration, best_trial.last_result['loss']
 
+
 def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
     def train_tune(config):
         model = GNN(config)
         trainer = pl.Trainer(max_epochs=max_epochs,
-                                accelerator=gnn_config['accelerator'],
-                                devices=1,
-                                enable_progress_bar=True,
-                                enable_checkpointing=True,
-                                callbacks=[raytune_callback])
+                             accelerator=gnn_config['accelerator'],
+                             devices=1,
+                             enable_progress_bar=True,
+                             enable_checkpointing=True,
+                             callbacks=[raytune_callback])
         trainer.fit(model, data_module)
 
     start = time.time()
@@ -235,7 +242,7 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
     #     mode='min'
     # )
     tpe = HyperOptSearch(
-            metric="loss", mode="min", n_initial_points=10)
+        metric="loss", mode="min", n_initial_points=10)
 
     analysis = tune.run(partial(train_tune),
                         config=gnn_config,
@@ -243,7 +250,7 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
                         search_alg=tpe,
                         local_dir=os.getcwd(),
                         resources_per_trial={
-                            gnn_config['accelerator'] : 1
+                            gnn_config['accelerator']: 1
                             # 'memory'    :   10 * 1024 * 1024 * 1024
                         })
 
@@ -262,15 +269,15 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
     #    data_module = GNNDataModule(datamodule_config, data_train, data_test)
 
     trainer = pl.Trainer(max_epochs=max_epochs,
-                            accelerator=gnn_config['accelerator'],
-                            devices=1,
-                            enable_progress_bar=True,
-                            enable_checkpointing=True,
-                            callbacks=[raytune_callback])
+                         accelerator=gnn_config['accelerator'],
+                         devices=1,
+                         enable_progress_bar=True,
+                         enable_checkpointing=True,
+                         callbacks=[raytune_callback])
 
     val_data_loader = data_module.val_dataloader()
     val_results = trainer.test(best_checkpoint_model, val_data_loader)
     test_results = trainer.test(best_checkpoint_model, test_data_loader)
     end = time.time()
     print(f"Elapsed time:{end - start}")
-    return best_configuration,val_results,test_results
+    return best_configuration, val_results, test_results
