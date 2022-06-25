@@ -15,6 +15,8 @@ from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA
 
+from utils.GINE import GINE
+
 
 class GNN(pl.LightningModule):
     def __init__(self, config, data_dir=None,name='GNN'):
@@ -34,16 +36,18 @@ class GNN(pl.LightningModule):
         dim = self.hidden_size
 
         if self.layer_type == GAT:
-            self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,
-                                   heads=8, norm=torch.nn.BatchNorm1d(dim))
-        elif self.layer_type == GIN:
-           self.gnn = self.layer_type(self.num_features,dim, num_layers=self.num_layers,
-                                   norm=torch.nn.BatchNorm1d(dim))
+            self.gnn = self.layer_type(self.num_features, dim, num_layers=self.num_layers, edge_dim=self.edge_dim,heads=8, norm=torch.nn.BatchNorm1d(dim))
+
+
+        elif self.layer_type == GINE:
+            self.gnn = self.layer_type(self.num_features,dim, num_layers=self.num_layers,edge_dim=self.edge_dim,norm=torch.nn.BatchNorm1d(dim))
+
+        layers = self.gnn._modules['convs']
 
         if config['active_layer'] == 'first':
-            self.last_layer = self.gnn._modules['convs'][0]
+            self.last_layer = layers[0]
         elif config['active_layer'] == 'last':
-            self.last_layer = self.gnn._modules['convs'][self.num_layers - 1]
+            self.last_layer = layers[:-1]
 
         if config['pool'] == 'mean':
             self.pool = global_mean_pool
@@ -66,11 +70,15 @@ class GNN(pl.LightningModule):
             edge_attr = graphs.edge_attr[:, :self.edge_dim].to(torch.float)
             edge_index = graphs.edge_index
             x = F.relu(self.gnn(x, edge_index, edge_attr))
-        elif isinstance(self.gnn, GIN):
+        # elif isinstance(self.gnn, GIN):
+        #     x = graphs.x[:, :self.num_features].to(torch.float)
+        #     edge_index = graphs.edge_index
+        #     x = F.relu(self.gnn(x, edge_index))
+        elif isinstance(self.gnn, GINE):
             x = graphs.x[:, :self.num_features].to(torch.float)
+            edge_attr = graphs.edge_attr[:, :self.edge_dim].to(torch.float)
             edge_index = graphs.edge_index
-            x = F.relu(self.gnn(x, edge_index))
-
+            x = F.relu(self.gnn(x, edge_index, edge_attr))
         self.emb_f = self.pool(x, batch)
         x = F.relu(self.fc1(self.emb_f))
         x = F.dropout(x, p=self.dropout_rate, training=self.training)

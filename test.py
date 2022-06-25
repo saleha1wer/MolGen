@@ -20,6 +20,7 @@ from torch_geometric.nn.glob import GlobalAttention, global_mean_pool
 from torch_geometric.nn.conv import GATConv
 from torch_geometric.data import Data
 from torch_geometric.nn.models import GIN, GAT, PNA, AttentiveFP
+from utils.GINE import GINE
 from utils.encode_ligand import calc_fps
 from rdkit import Chem
 from xgboost import XGBRegressor
@@ -42,10 +43,10 @@ def temp_func(n,e,config,data_module,test_loader):
 def main():
     batch_size = 64
     
-    parameters = {'N': [1, 2,4, 5, 7, 8, 9], 'E': [0, 1, 3]}
+    parameters = {'N': [1,4, 5, 7, 8, 9], 'E': [0, 1, 3]}
     
     config = {'N': None, 'E': None, 'lr': 0.0003, 'hidden': 256,
-              'layer_type': GIN, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
+              'layer_type': GINE, 'n_layers': 4, 'pool': 'mean', 'accelerator': 'cpu',
               'batch_size': 64, 'input_heads': 1, 'active_layer': 'first', 'trade_off_backbone': 1,
               'trade_off_head':0.0005, 'order': 1, 'patience': 10, 'dropout_rate':0.5, 'second_input': None}
     
@@ -67,8 +68,8 @@ def main():
         
     n_cores = int(mp.cpu_count())
     pool = mp.Pool(processes=int(n_cores))
-    results = pool.starmap(temp_func, [(n_node,0,config,data_module,test_loader) for n_node in parameters['N']])
-    # results = pool.starmap(temp_func, [(n_node,n_edge,config,data_module,test_loader) for n_node in parameters['N'] for n_edge in parameters['E']])
+
+    results = pool.starmap(temp_func, [(n_node,n_edge,config,data_module,test_loader) for n_node in parameters['N'] for n_edge in parameters['E']])
     print(results)
     pool.close()
     pool.join()
