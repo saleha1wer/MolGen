@@ -108,8 +108,8 @@ def eval(model, device, loader):
     return metric, sum(loss_sum) / len(loss_sum)
 
 
-def finetune(save_model_name, source_model, data_module, epochs, report_to_raytune, patience=40, order=1,
-             trade_off_backbone=0.0005, trade_off_head=0.1):
+def finetune(save_model_name, source_model, data_module, epochs, report_to_raytune,patience=40, order=1,
+             trade_off_backbone=0.0005, trade_off_head=0.1,fname='finetune_logs'):
     finetuned_model = deepcopy(source_model)
     device = torch.device("cuda:" + str(1)) if torch.cuda.is_available() else torch.device("cpu")
     finetuned_model.to(device)
@@ -154,7 +154,6 @@ def finetune(save_model_name, source_model, data_module, epochs, report_to_raytu
                                                            eps=1e-08)
     stopper = EarlyStopping(mode='lower', patience=patience, filename=save_model_name)
 
-    fname = 'finetuning_logs'  # delete file if already exists
     if os.path.exists(fname):
         shutil.rmtree(fname)
         print("removed the existing tensorboard file.")

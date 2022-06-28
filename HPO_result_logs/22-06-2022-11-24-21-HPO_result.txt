@@ -1,3 +1,0 @@
-Test loss achieved: 2 
-Val loss achieved:1 
-Configuration found: 3

@@ -52,32 +52,10 @@ def save_loss_and_config(val_loss='', test_loss='', configuration=''):
     message = f"Test loss achieved: {str(test_loss)} \nVal loss achieved:{str(val_loss)} \nConfiguration found: {str(configuration)}"
     file.write(message)
 
-def meta_hpo_basic(train_epochs, n_samples, train_size,space, report_test_loss = True):
-    batch_size = 64
-    no_a2a = True  # use a2a data or not in adenosine set
-    no_a2a = '_no_a2a' if no_a2a else ''
-    # for prot_target_encoding choose: None or 'one-hot-encoding'
-    # if choosing one-hot-encoding change input_heads in gnn_config
-
-    gnn_config = space
-    # pre_datamodule, fine_datamodule = create_pretraining_finetuning_DataModules(batch_size, no_a2a, train_size)
-    dataset = MoleculeDataset(root=os.getcwd() + '/data/a2aar', filename='human_a2aar_ligands',
-                              prot_target_encoding=None, xgb=None, include_fps=False)
-
-    train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=train_size, random_state=0)
-    data_train = dataset[train_indices.tolist()]
-    data_test = dataset[test_indices.tolist()]
-
-    datamodule_config = {
-        'batch_size': batch_size,
-        'num_workers': 0
-    }
-    data_module = GNNDataModule(datamodule_config, data_train, data_test)
-
-    best_configuration, best_val_loss, best_test_loss = run_hpo_basic(train_epochs, n_samples,
-                                                                      data_module, gnn_config)
-
-    return best_val_loss, best_test_loss, best_configuration
+def meta_hpo_basic(train_epochs, n_samples,space, data_module,report_test_loss = True):
+    best_configuration, best_val_loss = run_hpo_basic(train_epochs, n_samples,
+                                                                      data_module, space)
+    return best_val_loss, best_configuration
 
 
 def meta_hpo_finetuning(finetune_epochs, patience,n_samples, train_size,source_model, space,report_test_loss = True):
@@ -140,6 +118,8 @@ def run_hpo_finetuning(finetune_epochs,patience, n_samples, fine_data_module, gn
                         config=gnn_config,
                         num_samples=n_samples,  # number of samples taken in the entire sample space
                         search_alg=tpe,
+                        resources_per_trial={
+                            gnn_config['accelerator']: 1},
                         local_dir=os.getcwd(),
                         trial_dirname_creator=trial_name_generator)
 
@@ -189,20 +169,6 @@ def run_hpo_basic(max_epochs, n_samples, data_module, gnn_config):
     #    print(f"attempting to load file: {best_trial.checkpoint.value + 'checkpoint'}")
 
     best_checkpoint_model = GNN.load_from_checkpoint(best_trial.checkpoint.value + '/checkpoint')
+    torch.save(best_checkpoint_model.state_dict(), 'models_saved/GIN_afterHPO')
 
-    #    data_module = GNNDataModule(datamodule_config, data_train, data_test)
-
-    trainer = pl.Trainer(max_epochs=max_epochs,
-                         accelerator=gnn_config['accelerator'],
-                         devices=1,
-                         enable_progress_bar=True,
-                         enable_checkpointing=True,
-                         callbacks=[raytune_callback])
-
-    val_data_loader = data_module.val_dataloader()
-    test_data_loader = data_module.test_dataloader()
-    val_results = trainer.test(best_checkpoint_model, val_data_loader)
-    test_results = trainer.test(best_checkpoint_model, test_data_loader)
-    end = time.time()
-    print(f"Elapsed time:{end - start}")
-    return best_configuration, val_results, test_results
+    return best_configuration,best_trial.last_result['loss']

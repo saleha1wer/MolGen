@@ -1,67 +1,121 @@
-print('Starting Imports')
 import os
 import numpy as np
 import pytorch_lightning as pl
 from sklearn.model_selection import train_test_split
 from data_module import GNNDataModule, MoleculeDataset, create_pretraining_finetuning_DataModules
-from torch_geometric.nn.models import GAT, GIN
-from hpo import run_hpo_basic, run_hpo_finetuning, meta_hpo_finetuning, save_loss_and_config, calculate_test_loss, \
-    meta_hpo_basic
+from torch_geometric.nn.models import GIN
+from hpo import run_hpo_basic
 from finetune import finetune
 import torch
 from ray import tune
 from network import GNN
-from utils.GINE import GINE
-print('Imports Completed')
-def main(hpo_ft):
-    print('Starting Main')
-    if hpo_ft:
-        finetune_epochs = 50
-        patience = 15
-        n_samples = 30
-        source_config = {'N': 9, 'E':1, 'lr': 0.0001201744224722,'hidden':1024, 'layer_type': GINE , 'n_layers': 7, 
+from utils.GINE import GINE,GAT
+import argparse
+
+
+def main(mode,type,epochs,folder_path,file_name,save_dir,n_samples,pretrain_path):
+    input_heads = 1
+    second_input = None
+    batch_size = 64
+    filename = 'trained_model'
+    gnn = type
+    GAT_params = {'N': 9, 'E':1, 'lr': 0.0001201744224722,'hidden':1024, 'layer_type': GAT , 'n_layers': 7, 
                         'pool': 'GlobalAttention', 'accelerator': 'cpu','dropout_rate':0, 'v2':True, 'batch_size': 64, 
-                        'input_heads': 1, 'active_layer': 'last', 'second_input': None}
-        space = {'order':tune.choice([1,2,3]), 'trade_off_head': tune.choice([tune.loguniform(1e-4, 1e-1),tune.uniform(0.5, 1)]),
-                 'trade_off_backbone':tune.choice([tune.loguniform(5e-6, 1e-1),tune.uniform(0.5, 1)])}
-        print('Loading Data')
-        predatamodule, finedatamodule = create_pretraining_finetuning_DataModules(64, True, 0.9)
+                        'input_heads': input_heads, 'second_input': second_input}
+    GINE_params =  {'N': 9, 'E':0, 'lr': 0.000013188712926692827,'hidden':512, 'layer_type': GINE , 'n_layers': 8, 
+                        'pool': 'GlobalAttention', 'accelerator': 'cpu','dropout_rate':0, 'batch_size': 64, 
+                        'input_heads': input_heads, 'second_input': second_input}
+    finetune_params = {'order': 10,  'trade_off_head': 0.021585620269150924, 'trade_off_backbone': 0.0016808005879414354}  
+    # Create the data module
+    dataset = MoleculeDataset(root=os.getcwd() + folder_path, filename=file_name,
+                                prot_target_encoding=None,xgb=None,include_fps=False)
+    train_indices, test_indices = train_test_split(np.arange(dataset.len()), train_size=0.9, random_state=0)
+    data_train = dataset[train_indices.tolist()]
+    data_test = dataset[test_indices.tolist()]
+    datamodule_config = {
+    'batch_size': batch_size,
+    'num_workers': 0
+    }
+    data_module = GNNDataModule(datamodule_config,data_train,data_test)
+    if mode == 'train':
+        print('Starting Training')
+        params = GAT_params if gnn == 'GAT' else GINE_params
+        print('Model Params: ')
+        print(params)
+        model = GNN(params)
+        # Create the trainer
+        trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=epochs)
+        # Train the model
+        trainer.fit(model, data_module)
+        # Save the model
+        torch.save(model.state_dict(), './{}/{}.pt'.format(save_dir,filename))
+        print('Training Completed, saved model --> /{}/{}.pt'.format(save_dir,filename))
+    elif mode == 'hpo':
+        GAT_space = {'N': 9, 'E':1, 'lr':tune.loguniform(1e-4, 1e-1),'hidden': tune.choice([16, 32, 64, 128, 256, 512,1024]), 
+                'layer_type': GAT , 'n_layers': tune.choice([2, 3, 4, 5, 6, 7]), 'pool': 'GlobalAttention', 'accelerator': 'cpu','dropout_rate':tune.uniform(0,0.5), 
+                'v2':True, 'batch_size': 64, 'input_heads': input_heads, 'second_input': second_input}
+        GINE_space = {'N': 9, 'E':0, 'lr':tune.loguniform(1e-4, 1e-1),'hidden': tune.choice([16, 32, 64, 128, 256, 512,1024]), 
+                'layer_type': GINE , 'n_layers': tune.choice([2, 3, 4, 5, 6, 7]), 'pool': 'GlobalAttention', 'accelerator': 'cpu','dropout_rate':tune.uniform(0,0.5), 
+                'v2':True, 'batch_size': 64, 'input_heads': input_heads, 'second_input': second_input}
+        space = GAT_space if gnn == 'GAT' else GINE_space
+        run_hpo_basic(epochs,n_samples,data_module,space)
+    elif mode == 'finetune':
+        source_config = GAT_params if gnn == 'GAT' else GINE_params
+        # best hpo finetune params are:
+        finetune_params = {'order': 10,  'trade_off_head': 0.021585620269150924, 'trade_off_backbone': 0.0016808005879414354}   
         source_model = GNN(source_config)
-        print('Training Model')
-        source_trainer = pl.Trainer(accelerator='cpu', devices=1, max_epochs=150)
-        source_trainer.fit(source_model, predatamodule)
-        source_trainer.test(source_model, predatamodule.test_dataloader())
-        # torch.save(source_model.state_dict(), 'models_saved/bestconfig_GAT_pretrained')
-        # source_model.load_state_dict(torch.load('models_saved/bestconfig_GAT_pretrained'))
-        best_val_loss, best_configuration = meta_hpo_finetuning(finetune_epochs, patience, n_samples, 0.9,source_model, space)
-        # finetuned_model, train_losses,val_losses = finetune('test',source_model,finedatamodule,30,True,10,trade_off_backbone=2.5,trade_off_head=0.0005)
-        # torch.save(finetuned_model.state_dict(), 'models_saved/bestconfig_GAT_finetuned')
-        # print(train_losses)
-        # print(val_losses)
-        print(best_val_loss, best_configuration)
-    else:
-        pretrain_epochs = 50
-        train_size = 0.9
-        no_a2a = True
-        batch_size = 64
-        n_inputs = 1
-        second_input = 'fps'
-        space = {'N': 9, 'E': 1, 'lr': tune.loguniform(1e-5, 1e-2), 'hidden': tune.choice([64, 128, 256, 512, 1024]),
-                'layer_type': GIN, 'n_layers': tune.choice([2,4,6,8]), 'pool': tune.choice(['mean', 'GlobalAttention']),
-                'dropout_rate' : tune.choice([0,0.1,0.3,0.5]), 'accelerator': 'cpu', 'batch_size': 64,
-                'input_heads': 1, 'active_layer': 'last', 'second_input': None}
-        
-        best_val_loss,best_test_loss, best_config = meta_hpo_basic(pretrain_epochs,
-                                                    n_samples = 50,
-                                                    train_size = train_size,
-                                                    space = space,
-                                                    report_test_loss = True)
-        print('best config')
-        print(best_config)
-        save_loss_and_config(best_val_loss,best_test_loss, best_config)
-        print('Completed a basic HPO run!')
+        if gnn == 'GAT':
+            source_model.load_state_dict(torch.load(pretrained_model_path))
+        elif gnn == 'GINE':
+            source_model.load_state_dict(torch.load(pretrained_model_path))
+        print('Finetuning Model')
+        finetuned_model, train_losses,val_losses = finetune('Finetuned_{}'.format(gnn),source_model,data_module,epochs=epochs,report_to_raytune=False,patience=30,
+                                                            order = finetune_params['order'],trade_off_backbone=finetune_params['trade_off_backbone'],
+                                                            trade_off_head=finetune_params['trade_off_head'],fname='finetune_logs_{}'.format(gnn))
+        torch.save(finetuned_model.state_dict(), './{}/{}.pt'.format(save_dir,filename))
+        print('Finetuning Completed, saved model --> /{}/{}.pt'.format(save_dir,filename))
 
 
 if __name__ == '__main__':
-    main(hpo_ft=True)
+    parser = argparse.ArgumentParser(description='GenMol Affinity Predictor')
+    parser.add_argument('mode', type=str,
+                    help='train, hpo, or finetune')
+    parser.add_argument('type', type=str,
+                    help='GIN or GAT')
+    parser.add_argument('--epochs', type=int,
+                    help='Number of epochs to train. If HPO: number of epochs per sample. Default: 50')
+    parser.add_argument('--save-dir', type=str,
+                    help='Directory to save the trained model. Default: `models_saved`')
+    parser.add_argument('--folder_path', type=str,
+                    help='Path to folder with csv file with SMILES and target values. Default: `/data/a2aar`')
+    parser.add_argument('--file_name', type=str,
+                    help='Path to csv file with SMILES and target values. Default: `human_a2aar_ligands`')
+    parser.add_argument('--n_samples', type=int,
+                    help='If mode is hpo: number of samples to run. Default: 30')
+    parser.add_argument('--pretrained_model_path', type=str,
+                    help='If mode is fintune, path to pretrained model. Default: `./models_saved/<type>_pretrained.pt`')
+    args = parser.parse_args()
+    # main(mode='train')
+    mode = args.mode
+    type = args.type
+    epochs = args.epochs
+    save_dir = args.save_dir
+    folder_path = args.folder_path
+    file_name = args.file_name
+    n_samples = args.n_samples
+    pretrained_model_path = args.pretrained_model_path
 
+    if save_dir == None:
+        save_dir = 'models_saved'
+    if folder_path == None: 
+        folder_path = '/data/a2aar'
+    if file_name == None:
+        file_name = 'human_a2aar_ligands'
+    if epochs == None:
+        epochs = 50
+    if n_samples == None:
+        n_samples = 30
+    if pretrained_model_path == None:
+        pretrained_model_path = './models_saved/GAT_pretrained.pt' if type == 'GAT' else './models_saved/GIN_pretrained.pt'
+    main(mode=mode, type=type, epochs=epochs,folder_path=folder_path, file_name=file_name, save_dir=save_dir,
+         n_samples=n_samples, pretrain_path=pretrained_model_path)

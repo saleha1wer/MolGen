@@ -27,6 +27,7 @@ def add_xgbpred_col(df, model_name):
     mols = [Chem.MolFromSmiles(smiles) for smiles in df['SMILES']]
     fps = calc_fps(mols)
     preds = model.predict(fps)
+    preds = (preds - min(preds)) / (max(preds) - min(preds))
     df['xgb_pred'] = preds
     # if len(smiles_list) < batch_size:
         # preds = np.concatenate((preds, np.zeros((batch_size-len(smiles_list),))), axis=0)

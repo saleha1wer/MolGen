@@ -1,3 +1,0 @@
-Test loss achieved: 1.969273328781128 
-Val loss achieved:1.7187695018452105 
-Configuration found: {'N': 5, 'E': 1, 'lr': 0.0034664451346794883, 'hidden': 512, 'layer_type': <class 'torch_geometric.nn.models.basic_gnn.GIN'>, 'n_layers': 8, 'pool': 'mean', 'accelerator': 'cpu', 'batch_size': 64, 'input_heads': 1, 'active_layer': 'last', 'trade_off_backbone': 0.0005628285273332112, 'trade_off_head': 0.0002622775577313938, 'order': 1, 'patience': 10}

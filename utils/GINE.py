@@ -2,14 +2,13 @@
 import copy
 import inspect
 from typing import Any, Callable, Dict, List, Optional, Union
-from black import out
 import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import Linear, ModuleList,Sequential
 
-from torch_geometric.nn.conv import MessagePassing, GINEConv
+from torch_geometric.nn.conv import MessagePassing, GINEConv,GATConv,GATv2Conv
 from torch_geometric.nn.models import MLP
 from torch_geometric.nn.models.jumping_knowledge import JumpingKnowledge
 from torch_geometric.typing import Adj
@@ -123,7 +122,6 @@ class BasicGNN(torch.nn.Module):
         """"""
         xs: List[Tensor] = []
         for i in range(self.num_layers):
-
             x = self.convs[i](x, edge_index, *args, **kwargs)
             if i == self.num_layers - 1 and self.jk_mode is None:
                 break
@@ -178,7 +176,7 @@ class GINE(BasicGNN):
         # mlp = MLP([-1, out_channels, out_channels], batch_norm=True)
 
         mlp = Sequential(
-            Linear(in_channels, out_channels),
+            Linear(in_channels, out_channels)
         )
         return GINEConv(mlp, **kwargs)
 
@@ -227,3 +225,62 @@ def activation_resolver(query: Union[Any, str] = 'relu', *args, **kwargs):
     ]
     return resolver(acts, query, base_cls, *args, **kwargs)
 
+
+class GAT(BasicGNN):
+    r"""The Graph Neural Network from `"Graph Attention Networks"
+    <https://arxiv.org/abs/1710.10903>`_ or `"How Attentive are Graph Attention
+    Networks?" <https://arxiv.org/abs/2105.14491>`_ papers, using the
+    :class:`~torch_geometric.nn.GATConv` or
+    :class:`~torch_geometric.nn.GATv2Conv` operator for message passing,
+    respectively.
+
+    Args:
+        in_channels (int): Size of each input sample.
+        hidden_channels (int): Size of each hidden sample.
+        num_layers (int): Number of message passing layers.
+        out_channels (int, optional): If not set to :obj:`None`, will apply a
+            final linear transformation to convert hidden node embeddings to
+            output size :obj:`out_channels`. (default: :obj:`None`)
+        v2 (bool, optional): If set to :obj:`True`, will make use of
+            :class:`~torch_geometric.nn.conv.GATv2Conv` rather than
+            :class:`~torch_geometric.nn.conv.GATConv`. (default: :obj:`False`)
+        dropout (float, optional): Dropout probability. (default: :obj:`0.`)
+        act (str or Callable, optional): The non-linear activation function to
+            use. (default: :obj:`"relu"`)
+        norm (torch.nn.Module, optional): The normalization operator to use.
+            (default: :obj:`None`)
+        jk (str, optional): The Jumping Knowledge mode
+            (:obj:`"last"`, :obj:`"cat"`, :obj:`"max"`, :obj:`"lstm"`).
+            (default: :obj:`"last"`)
+        act_first (bool, optional): If set to :obj:`True`, activation is
+            applied before normalization. (default: :obj:`False`)
+        act_kwargs (Dict[str, Any], optional): Arguments passed to the
+            respective activation function defined by :obj:`act`.
+            (default: :obj:`None`)
+        **kwargs (optional): Additional arguments of
+            :class:`torch_geometric.nn.conv.GATConv` or
+            :class:`torch_geometric.nn.conv.GATv2Conv`.
+    """
+    def init_conv(self, in_channels: int, out_channels: int,
+                  **kwargs) -> MessagePassing:
+
+        v2 = kwargs.pop('v2', False)
+        heads = kwargs.pop('heads', 1)
+        concat = kwargs.pop('concat', True)
+
+        # Do not use concatenation in case the layer `GATConv` layer maps to
+        # the desired output channels (out_channels != None and jk != None):
+        if getattr(self, '_is_conv_to_out', False):
+            concat = False
+
+        if concat and out_channels % heads != 0:
+            raise ValueError(f"Ensure that the number of output channels of "
+                             f"'GATConv' (got '{out_channels}') is divisible "
+                             f"by the number of heads (got '{heads}')")
+
+        if concat:
+            out_channels = out_channels // heads
+
+        Conv = GATConv if not v2 else GATv2Conv
+        return Conv(in_channels, out_channels, heads=heads, concat=concat,
+                    dropout=self.dropout, **kwargs)
